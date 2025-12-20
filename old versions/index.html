@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+
+  <title>RV Rover (MVP)</title>
+
+  <!-- Optional: we’ll build this next. The JS works without it. -->
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Tiny safety baseline so it’s readable even before style.css exists -->
+  <style>
+    html, body { height: 100%; margin: 0; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:#0b0f14; color:#e6edf3; }
+    .nojs { padding: 16px; max-width: 900px; margin: 0 auto; }
+    .nojs code { background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 6px; }
+  </style>
+</head>
+
+<body>
+  <noscript>
+    <div class="nojs">
+      <h2>JavaScript is required</h2>
+      <p>This game runs entirely in the browser with JavaScript. Please enable JavaScript and reload.</p>
+      <p>If you’re running files locally, keep <code>index.html</code>, <code>game.js</code>, and (later) <code>style.css</code> in the same folder.</p>
+    </div>
+  </noscript>
+
+  <!--
+    IMPORTANT:
+    The UI is created by game.js and injected into <body>.
+    So the HTML stays intentionally minimal for now.
+  -->
+
+  <script src="game.js"></script>
+</body>
+</html>

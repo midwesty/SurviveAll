@@ -1,0 +1,19 @@
+[
+  {
+    "id": "npc_scavenger",
+    "name": "Zig",
+    "archetype": "Lone Scavenger",
+    "perk": { "id": "perk_scrounger", "name": "Scrounger", "desc": "+10% salvage yield." },
+    "quirk": { "id": "quirk_picky", "name": "Picky Eater", "desc": "Hates low-tier rations." },
+    "stats": { "Wilderness": 2, "Scavenge": 5, "Mechanics": 2, "Cooking": 1, "Medical": 1, "Grit": 4 }
+  },
+  {
+    "id": "npc_medic",
+    "name": "Dot",
+    "archetype": "Road Medic",
+    "perk": { "id": "perk_fieldmed", "name": "Field Medic", "desc": "Reduces injury downtime." },
+    "quirk": { "id": "quirk_germaphobe", "name": "Germaphobe", "desc": "Hates dirty water (morale hit)." },
+    "stats": { "Wilderness": 2, "Scavenge": 2, "Mechanics": 1, "Cooking": 2, "Medical": 6, "Grit": 3 }
+  }
+]
+
