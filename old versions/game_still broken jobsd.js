@@ -1,5 +1,5 @@
 /* ============================================================================
-  RV ROVER (v0.2.6) — game.js
+  RV ROVER (v0.2.1) — game.js
   Single-file MVP engine + UI (HTML/CSS coming next), data-driven via JSON.
   - Loads data from /data/*.json (config/items/recipes/stations/jobs/biomes/npcs/animals)
   - Falls back to embedded starter data if JSON files aren’t present yet
@@ -19,10 +19,6 @@
 
 (() => {
   "use strict";
-
-  // Build marker (helps confirm which file the browser is actually running)
-  window.RVROVER_BUILD = "v0.2.6";
-  console.log("[RV ROVER] Loaded", window.RVROVER_BUILD);
 
   /* =========================
      Constants / Storage Keys
