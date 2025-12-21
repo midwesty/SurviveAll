@@ -1,5 +1,5 @@
 /* ============================================================================
-  RV ROVER (v0.2.1) — game.js
+  RV ROVER (v0.1) — game.js
   Single-file MVP engine + UI (HTML/CSS coming next), data-driven via JSON.
   - Loads data from /data/*.json (config/items/recipes/stations/jobs/biomes/npcs/animals)
   - Falls back to embedded starter data if JSON files aren’t present yet
@@ -33,13 +33,13 @@
   const __memStore = Object.create(null);
   const store = {
     getItem(key) {
-      try { return window.localStorage.getItem(key); } catch { return __memStore[key] ?? null; }
+      try { return store.getItem(key); } catch { return __memStore[key] ?? null; }
     },
     setItem(key, val) {
-      try { window.localStorage.setItem(key, String(val)); } catch { __memStore[key] = String(val); }
+      try { store.setItem(key, String(val)); } catch { __memStore[key] = String(val); }
     },
     removeItem(key) {
-      try { window.localStorage.removeItem(key); } catch { delete __memStore[key]; }
+      try { store.removeItem(key); } catch { delete __memStore[key]; }
     }
   };
 
