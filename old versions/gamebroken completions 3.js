@@ -21,7 +21,7 @@
   "use strict";
 
   // Build marker (helps confirm which file the browser is actually running)
-  window.RVROVER_BUILD = "v0.2.7";
+  window.RVROVER_BUILD = "v0.2.6";
   console.log("[RV ROVER] Loaded", window.RVROVER_BUILD);
 
   /* =========================
@@ -1749,23 +1749,18 @@
       }
 
       // If there is a queue and first entry has no startAt, start it
-      if (q.length > 0 && q[0].startAt == null) q[0].startAt = t;
+      if (q.length > 0 && !q[0].startAt) q[0].startAt = t;
 
       // Complete jobs that finished
       while (q.length > 0) {
         const jEntry = q[0];
-        if (jEntry.startAt == null) break;
+        if (!jEntry.startAt) break;
         const endsAt = jEntry.startAt + jEntry.durationMs;
         if (endsAt > t) break;
 
         // Complete
         const job = idx.jobsById.get(jEntry.jobId);
-        try {
-          resolveJobCompletion(state, loadedData, char, job, jEntry);
-        } catch (e) {
-          console.error(e);
-          pushLog(state, `ERROR: Job completion failed for ${char.name} (${job?.name ?? jEntry.jobId}). See console.`, "warn", char.id, loadedData);
-        }
+        resolveJobCompletion(state, loadedData, char, job, jEntry);
 
         q.shift();
 
@@ -1972,18 +1967,6 @@
   /* =========================
      Crafting
   ========================= */
-
-  // Returns an integer tool tier (0 = no appropriate tool equipped).
-  // Used by job completion/scouting to scale yields/success.
-  function getToolTierForJob(state, loadedData, char, jobOrDef) {
-    const job = jobOrDef || null;
-    const toolTag = (typeof job === "string") ? job : (job && job.toolTag ? job.toolTag : null);
-    if (!toolTag) return 0;
-    const toolInfo = getEquippedToolDef(char, loadedData, toolTag);
-    const tier = toolInfo?.def?.tool?.tier;
-    return (typeof tier === "number" && isFinite(tier)) ? Math.max(0, Math.floor(tier)) : 0;
-  }
-
   function canCraftRecipe(state, loadedData, recipe) {
     const { idx } = loadedData;
 
@@ -2048,7 +2031,7 @@
     for (const [stationId, q] of Object.entries(state.queues.craftsByStationId)) {
       if (!q || q.length === 0) continue;
 
-      if (q[0].startAt == null) q[0].startAt = t;
+      if (!q[0].startAt) q[0].startAt = t;
 
       while (q.length > 0) {
         const cEntry = q[0];
@@ -3536,13 +3519,13 @@
             for (const q of Object.values(state.queues.jobsByCharId)) {
               if (!q || q.length === 0) continue;
               const first = q[0];
-              if (first.startAt == null) continue;
+              if (!first.startAt) continue;
               next = next == null ? (first.startAt + first.durationMs) : Math.min(next, first.startAt + first.durationMs);
             }
             for (const q of Object.values(state.queues.craftsByStationId)) {
               if (!q || q.length === 0) continue;
               const first = q[0];
-              if (first.startAt == null) continue;
+              if (!first.startAt) continue;
               next = next == null ? (first.startAt + first.durationMs) : Math.min(next, first.startAt + first.durationMs);
             }
             if (next == null || next <= t) {
