@@ -1825,8 +1825,7 @@
       const actionJobId = jEntry.meta.actionJobId;
       const actionJob = actionJobId ? loadedData.idx.jobsById.get(actionJobId) : null;
 
-      const __seedTime = Math.floor(((state.meta.lastSimAt || gameNow(state)) || nowReal()) / 1000);
-      const rng = mulberry32(hashStringToUint(`${state.rngSeed}|${__seedTime}|${jEntry.id}`));
+      const rng = mulberry32(hashStringToUint(`${state.rngSeed}|${state.time.ticks}|${jEntry.id}`));
       const toolTier = getToolTierForJob(state, loadedData, char, actionJob || job);
       const wild = effectiveSkill(char, "Wilderness");
       const wits = effectiveSkill(char, "Wits");
@@ -1858,8 +1857,7 @@
       const extra = clamp(0.10 - (grit * 0.01), 0.02, 0.12);
       if (Math.random() < extra) applyInjury(state, loadedData, char, "minor");
     } else {
-      const __seedTime = Math.floor(((state.meta.lastSimAt || gameNow(state)) || nowReal()) / 1000);
-      const rng = mulberry32(hashStringToUint(`${state.rngSeed}|${__seedTime}|${jEntry.id}`));
+      const rng = mulberry32(hashStringToUint(`${state.rngSeed}|${state.time.ticks}|${jEntry.id}`));
       const biome = loadedData.idx.biomesById.get(tile.biomeId);
 
       // Determine tool tier from equipment (if job wants it)
@@ -2441,16 +2439,10 @@
   function panelActions(state, loadedData) {
     const wrap = el("div", { class: "panelStack" });
 
-    let tileId = state.meta.lastTileId;
+    const tileId = state.meta.lastTileId;
     if (!tileId) {
-      const prec = loadedData.data.config.tilePrecision || 7;
-      tileId = geohashEncode(0, 0, prec);
-      state.meta.lastTileId = tileId;
-      const tile = getOrCreateTile(state, loadedData, tileId);
-      const biome = biomeForTile(loadedData, tile);
-      wrap.appendChild(el("div", { class: "hint" }, ["Location not set — using a default tile. You can still tap Check Location later."]));
-      pushLog(state, `Using default tile ${tileId} (${biome.name}).`, "info", null, loadedData);
-      safetySnapshot(state, loadedData);
+      wrap.appendChild(el("div", { class: "hint" }, ["Tap Check Location first."]));
+      return wrap;
     }
 
     const tile = getOrCreateTile(state, loadedData, tileId);
@@ -3668,9 +3660,6 @@
         if (!state.queues.craftsByStationId) state.queues.craftsByStationId = {};
         if (!state.world) state.world = { discoveredTiles: {} };
         if (!state.world.discoveredTiles) state.world.discoveredTiles = {};
-        // Back-compat for older builds that used state.time.ticks
-        if (!state.time) state.time = { ticks: 0 };
-        if (typeof state.time.ticks !== "number") state.time.ticks = 0;
         if (!state.rv?.storage) {
           state.rv = state.rv || {};
           state.rv.storage = { capacity: 0, stacks: [], instances: [] };
@@ -3733,19 +3722,7 @@
         ctx.simulateAndRender();
       } catch (e) {
         console.error(e);
-        // Fallback: if GPS is denied/unavailable, drop the player into a deterministic default tile
-        // so the game remains playable without location permission.
-        const prec = loadedData.data.config.tilePrecision || 7;
-        const fallbackTileId = state.meta.lastTileId || geohashEncode(0, 0, prec);
-        state.meta.lastKnownLat = state.meta.lastKnownLat ?? 0;
-        state.meta.lastKnownLon = state.meta.lastKnownLon ?? 0;
-        state.meta.lastTileId = fallbackTileId;
-        const tile = getOrCreateTile(state, loadedData, fallbackTileId);
-        const biome = biomeForTile(loadedData, tile);
-        pushLog(state, `Location unavailable — using default tile ${fallbackTileId} (${biome.name}).`, "warn", null, loadedData);
-        safetySnapshot(state, loadedData);
-        ctx.simulateAndRender();
-        toast("Location unavailable — using default tile.");
+        toast("Location failed. Ensure location permission is enabled.");
       }
     });
 
