@@ -21,7 +21,7 @@
   "use strict";
 
   // Build marker (helps confirm which file the browser is actually running)
-  window.RVROVER_BUILD = "v0.3.0";
+  window.RVROVER_BUILD = "v0.3.1";
   console.log("[RV ROVER] Loaded", window.RVROVER_BUILD);
 
   /* =========================
@@ -1682,7 +1682,8 @@
       toolOk,
       tileId: (opts.tileId != null ? opts.tileId : state.meta.lastTileId),
       meta: opts.meta || null,
-      completed: false
+      completed: false,
+      inputs: (recipe.inputs || []).map(i => ({ id: i.id, qty: i.qty }))
     };
 
     state.queues.jobsByCharId[charId] = state.queues.jobsByCharId[charId] || [];
@@ -1965,9 +1966,8 @@
       downCharacter(state, loadedData, char);
     }
 
-    // Log completion summary
-    const gainedText = got.length ? got.map(g => `${g.qty}× ${idx.itemsById.get(g.id)?.name ?? g.id}`).join(", ") : "nothing";
-    pushLog(state, `${char.name} finished ${job.name}: got ${gainedText}.`, "good", char.id, loadedData);
+  // Log completion summary (keep it simple; gains/injuries are logged separately above)
+pushLog(state, `${char.name} finished ${job.name}.`, "good", char.id, loadedData);
 
     // Tutorial completion check
     if (!state.meta.tutorialDone) {
@@ -2042,9 +2042,7 @@
       createdAt: gameNow(state),
       startAt: null,
       durationMs: (recipe.timeSec || 60) * 1000,
-      completed: false,
-      // Store a copy of consumed inputs so we can refund if the player removes this craft from the queue.
-      inputs: (recipe.inputs || []).map(i => ({ id: i.id, qty: i.qty }))
+      completed: false
     };
 
     const q = state.queues.craftsByStationId[recipe.station] || (state.queues.craftsByStationId[recipe.station] = []);
@@ -2056,86 +2054,63 @@
     return { ok: true };
   }
 
-  
   function cancelCraftEntry(state, loadedData, stationId, entryId) {
     const { idx } = loadedData;
     const q = state.queues.craftsByStationId?.[stationId];
-    if (!q || q.length === 0) return { ok: false, reason: "Queue is empty." };
+    if (!q || q.length === 0) return { ok: false, reason: "empty" };
 
     const i = q.findIndex(e => e.id === entryId);
-    if (i < 0) return { ok: false, reason: "Craft entry not found." };
+    if (i < 0) return { ok: false, reason: "not found" };
 
     const entry = q[i];
     const recipe = idx.recipesById.get(entry.recipeId);
 
-    // Refund inputs (best-effort). Inputs were consumed at enqueue time in startCraft().
+    // Refund inputs (best-effort). Inputs were removed at craft start.
     const inputs = entry.inputs || recipe?.inputs || [];
     for (const inp of inputs) {
-      if (!inp?.id || !inp?.qty) continue;
-      const res = addItemToStorage(state, loadedData, inp.id, inp.qty);
-      if (!res?.ok) {
-        pushLog(
-          state,
-          `Storage full — couldn't refund ${inp.qty}× ${(idx.itemsById.get(inp.id)?.name ?? inp.id)}.`,
-          "warn",
-          null,
-          loadedData
-        );
+      const ok = addItemToStorage(state, loadedData, inp.id, inp.qty);
+      if (!ok?.ok) {
+        pushLog(state, `Storage full. Couldn't refund ${inp.qty}× ${idx.itemsById.get(inp.id)?.name ?? inp.id}.`, "bad", null, loadedData);
       }
     }
 
-    // Remove the entry
     q.splice(i, 1);
 
-    // If we removed the currently-active craft, start the next one immediately.
-    if (i === 0 && q[0] && q[0].startAt == null) q[0].startAt = gameNow(state);
+    // If we canceled the active craft, start the next one immediately.
+    if (i === 0 && q[0]) q[0].startAt = gameNow(state);
 
-    pushLog(state, `Cancelled craft: ${recipe?.name ?? entry.recipeId}.`, "info", null, loadedData);
+    pushLog(state, `Canceled craft: ${recipe?.name ?? entry.recipeId}.`, "info", null, loadedData);
     safetySnapshot(state, loadedData);
     return { ok: true };
   }
 
-function tickCraftQueues(state, loadedData) {
+
+  function tickCraftQueues(state, loadedData) {
     const { idx } = loadedData;
     const t = gameNow(state);
 
     for (const [stationId, q] of Object.entries(state.queues.craftsByStationId)) {
       if (!q || q.length === 0) continue;
 
-      // If the head craft hasn't started yet, start it now.
       if (q[0].startAt == null) q[0].startAt = t;
 
-      // Complete as many crafts as are due. Always advance the queue, even if a craft errors.
       while (q.length > 0) {
         const cEntry = q[0];
-
-        // Defensive: ensure we have a start time.
-        if (cEntry.startAt == null) cEntry.startAt = t;
-
-        const recipe = idx.recipesById.get(cEntry.recipeId);
-        const durMs = Number.isFinite(cEntry.durationMs) ? cEntry.durationMs : ((recipe?.timeSec || 60) * 1000);
-        const endsAt = cEntry.startAt + durMs;
-
+        const endsAt = cEntry.startAt + cEntry.durationMs;
         if (endsAt > t) break;
 
+        const recipe = idx.recipesById.get(cEntry.recipeId);
         try {
-          if (!recipe) throw new Error(`Unknown recipeId: ${cEntry.recipeId}`);
           resolveCraftCompletion(state, loadedData, recipe);
-        } catch (err) {
-          console.error(err);
-          pushLog(
-            state,
-            `ERROR: crafting failed for ${recipe?.name ?? cEntry.recipeId}. See console.`,
-            "warn",
-            null,
-            loadedData
-          );
-        } finally {
-          // Always advance, so we never "re-complete" the same craft endlessly.
-          q.shift();
-          if (q.length > 0 && q[0].startAt == null) q[0].startAt = endsAt;
-          safetySnapshot(state, loadedData);
+        } catch (e) {
+          console.error(e);
+          pushLog(state, `Craft error while completing ${recipe?.name ?? cEntry.recipeId} (see console).`, "bad", null, loadedData);
         }
+
+        q.shift();
+        if (q.length > 0) q[0].startAt = endsAt;
+
+        safetySnapshot(state, loadedData);
       }
     }
   }
@@ -2143,27 +2118,36 @@ function tickCraftQueues(state, loadedData) {
   function resolveCraftCompletion(state, loadedData, recipe) {
     const { idx } = loadedData;
 
-    if (recipe.special?.makeItem) {
-      // Special: create/ensure special item exists and add it
-      const it = recipe.special.makeItem;
-      if (!idx.itemsById.has(it.id)) {
-        // (Should already be normalized on load)
+    try {
+      if (!recipe) {
+        pushLog(state, "Craft failed: missing recipe data.", "bad", null, loadedData);
+        return;
       }
-      addItemToStorage(state, loadedData, it.id, recipe.special.qty || 1);
-      pushLog(state, `Crafted: ${it.name}.`, "good", null, loadedData);
-      return;
-    }
 
-    const gained = [];
-    for (const out of (recipe.outputs || [])) {
-      if (!out.qty || out.qty <= 0) continue;
-      const ok = addItemToStorage(state, loadedData, out.id, out.qty);
-      if (ok.ok) gained.push({ id: out.id, qty: out.qty });
-      else pushLog(state, `Storage full. Couldn't store crafted item: ${idx.itemsById.get(out.id)?.name ?? out.id}.`, "bad", null, loadedData);
-    }
+      if (recipe.special?.makeItem) {
+        const it = recipe.special.makeItem;
+        const qty = recipe.special.qty || 1;
+        const ok = addItemToStorage(state, loadedData, it.id, qty);
+        if (!ok?.ok) {
+          pushLog(state, `Storage full. Couldn't store crafted ${idx.itemsById.get(it.id)?.name ?? it.id}.`, "bad", null, loadedData);
+        }
+        pushLog(state, `Craft complete: ${recipe.name}.`, "good", null, loadedData);
+        return;
+      }
 
-    const txt = gained.length ? gained.map(g => `${g.qty}× ${idx.itemsById.get(g.id)?.name ?? g.id}`).join(", ") : "nothing";
-    pushLog(state, `Craft complete: ${recipe.name} -> ${txt}.`, "good", null, loadedData);
+      for (const out of (recipe.outputs || [])) {
+        if (!out || !out.id || !out.qty) continue;
+        const ok = addItemToStorage(state, loadedData, out.id, out.qty);
+        if (!ok?.ok) {
+          pushLog(state, `Storage full. Couldn't store crafted ${idx.itemsById.get(out.id)?.name ?? out.id}.`, "bad", null, loadedData);
+        }
+      }
+
+      pushLog(state, `Craft complete: ${recipe.name}.`, "good", null, loadedData);
+    } catch (e) {
+      console.error(e);
+      pushLog(state, `Craft error while completing ${recipe?.name ?? "a recipe"} (see console).`, "bad", null, loadedData);
+    }
   }
 
   /* =========================
@@ -2892,46 +2876,37 @@ function tickCraftQueues(state, loadedData) {
       const stName = loadedData.idx.stationsById.get(stationId)?.name ?? stationId;
       const box = el("div", { class: "card" });
       box.appendChild(el("div", { class: "smallLabel" }, [stName]));
-      const body = el("div", { class: "hint" });
+
+      const body = el("div", { class: "cardBody" });
 
       if (!q || q.length === 0) {
-        body.textContent = "Empty.";
+        body.appendChild(el("div", { class: "hint" }, ["Empty."]));
       } else {
         const t = gameNow(state);
-        body.style.display = "flex";
-        body.style.flexDirection = "column";
-        body.style.gap = "6px";
 
         for (let i = 0; i < q.length; i++) {
           const c = q[i];
           const rec = loadedData.idx.recipesById.get(c.recipeId);
-          const ends = (c.startAt == null ? t : c.startAt) + (c.durationMs || 0);
+          const ends = (c.startAt || t) + c.durationMs;
           const left = Math.max(0, ends - t);
-
           const label = `${i === 0 ? "▶" : "•"} ${rec?.name ?? c.recipeId} — ${fmtTime(left)} remaining`;
 
           const row = el("div", { class: "row" });
-          row.appendChild(el("div", {
-            class: "hint",
-            style: "flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
-          }, [label]));
+          row.appendChild(el("div", { class: "hint", style: "flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" }, [label]));
 
-          const btn = el("button", {
-            class: "btn ghost",
+          row.appendChild(el("button", {
+            class: "btn",
             onclick: () => {
               const res = cancelCraftEntry(state, loadedData, stationId, c.id);
-              if (!res.ok) toast(res.reason || "Can't cancel.");
+              if (!res.ok) toast("Nothing to cancel.");
               renderAll(state, loadedData);
-              showPanel("Crafting", panelCrafting(state, loadedData));
             }
-          }, [i === 0 ? "Cancel" : "Remove"]);
-          btn.style.padding = "4px 8px";
-          btn.style.fontSize = "12px";
+          }, [i === 0 ? "Cancel" : "Remove"]));
 
-          row.appendChild(btn);
           body.appendChild(row);
         }
       }
+
       box.appendChild(body);
       wrap.appendChild(box);
     }
