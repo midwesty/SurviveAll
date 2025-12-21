@@ -21,7 +21,7 @@
   "use strict";
 
   // Build marker (helps confirm which file the browser is actually running)
-  window.RVROVER_BUILD = "v0.2.9";
+  window.RVROVER_BUILD = "v0.2.8";
   console.log("[RV ROVER] Loaded", window.RVROVER_BUILD);
 
   /* =========================
@@ -100,17 +100,6 @@
       return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
     };
   }
-
-  function randInt(rng, min, max) {
-    // Inclusive integer in [min, max]. Accepts an RNG function (0..1).
-    const a = Number.isFinite(min) ? min : 0;
-    const b = Number.isFinite(max) ? max : a;
-    const lo = Math.min(a, b);
-    const hi = Math.max(a, b);
-    const r = (typeof rng === "function") ? rng() : Math.random();
-    return lo + Math.floor(r * (hi - lo + 1));
-  }
-
 
   function weightedPick(rng, entries /* [{id, w}] */) {
     const total = entries.reduce((a, e) => a + Math.max(0, e.w), 0);
