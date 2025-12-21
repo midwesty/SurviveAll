@@ -2112,37 +2112,12 @@
   /* =========================
      Saves (manual slots + safety snapshot)
   ========================= */
-  function normalizeSaveList(raw) {
-    // Back-compat: older versions may have stored saves as an object map or wrapped structure.
-    if (Array.isArray(raw)) return raw;
-    if (raw && typeof raw === "object") {
-      if (Array.isArray(raw.saves)) return raw.saves;
-      // object map: {id:{...slot}, ...}
-      const vals = Object.values(raw);
-      // keep only plausible slot objects
-      return vals.filter(v => v && typeof v === "object" && ("state" in v || "name" in v || "id" in v));
-    }
-    return [];
-  }
-
-  function sanitizeSaveSlot(slot) {
-    if (!slot || typeof slot !== "object") return null;
-    const id = String(slot.id || uid("slot"));
-    const name = String(slot.name || "Untitled Save");
-    const ts = Number.isFinite(slot.ts) ? slot.ts : nowReal();
-    const state = slot.state || slot.payload || slot.data || slot.gameState || null;
-    return { id, name, ts, state };
-  }
-
   function loadAllSaves() {
-    const raw = safeJsonParse(store.getItem(LS_SAVES_KEY), []);
-    const list = normalizeSaveList(raw).map(sanitizeSaveSlot).filter(Boolean);
-    return list;
+    return safeJsonParse(store.getItem(LS_SAVES_KEY), []);
   }
 
   function saveAllSaves(list) {
-    const arr = (Array.isArray(list) ? list : []).map(sanitizeSaveSlot).filter(Boolean);
-    store.setItem(LS_SAVES_KEY, JSON.stringify(arr));
+    store.setItem(LS_SAVES_KEY, JSON.stringify(list));
   }
 
   function safetySnapshot(state, loadedData) {
@@ -2158,8 +2133,7 @@
   }
 
   function createSaveSlot(name, state) {
-    const _saves = loadAllSaves();
-    const saves = Array.isArray(_saves) ? _saves : [];
+    const saves = loadAllSaves();
     const id = uid("save");
     saves.push({ id, name: name || "Unnamed Save", ts: nowReal(), state });
     saveAllSaves(saves);
@@ -2168,8 +2142,7 @@
   }
 
   function updateSaveSlot(saveId, state) {
-    const _saves = loadAllSaves();
-    const saves = Array.isArray(_saves) ? _saves : [];
+    const saves = loadAllSaves();
     const s = saves.find(x => x.id === saveId);
     if (!s) return false;
     s.ts = nowReal();
@@ -2188,8 +2161,7 @@
   }
 
   function getSaveSlot(saveId) {
-    const _saves = loadAllSaves();
-    const saves = Array.isArray(_saves) ? _saves : [];
+    const saves = loadAllSaves();
     return saves.find(x => x.id === saveId) || null;
   }
 
@@ -3252,8 +3224,7 @@
     const wrap = el("div", { class: "panelStack" });
     wrap.appendChild(el("div", { class: "hint" }, ["Manual saves only. A hidden safety snapshot is kept to prevent accidental loss."]));
 
-    const _saves = loadAllSaves();
-    const saves = Array.isArray(_saves) ? _saves : [];
+    const saves = loadAllSaves();
     const activeId = ctx.activeSaveId;
 
     const list = el("div", { class: "panelStack" });
