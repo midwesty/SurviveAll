@@ -1967,7 +1967,7 @@
 
     // Log completion summary
     const gainedText = got.length ? got.map(g => `${g.qty}× ${idx.itemsById.get(g.id)?.name ?? g.id}`).join(", ") : "nothing";
-    pushLog(state, `${char.name} finished ${job.name}: got ${gainedText}.`, "good", char.id, loadedData);
+pushLog(state, `${char.name} finished ${job.name}.`, "good", char.id, loadedData);
 
     // Tutorial completion check
     if (!state.meta.tutorialDone) {
