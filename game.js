@@ -1965,8 +1965,7 @@
       downCharacter(state, loadedData, char);
     }
 
-    // Log completion summary
-    const gainedText = got.length ? got.map(g => `${g.qty}× ${idx.itemsById.get(g.id)?.name ?? g.id}`).join(", ") : "nothing";
+  // Log completion summary (keep it simple; gains/injuries are logged separately above)
 pushLog(state, `${char.name} finished ${job.name}.`, "good", char.id, loadedData);
 
     // Tutorial completion check
