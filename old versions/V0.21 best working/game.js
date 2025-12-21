@@ -29,21 +29,6 @@
   const LS_LAST_ACTIVE_SAVE_KEY = `${APP_ID}__lastActiveSaveId`;
   const LS_ADMIN_UNLOCK_KEY = `${APP_ID}__adminUnlocked`;
 
-  // Storage wrapper: falls back to in-memory storage if localStorage is blocked
-  const __memStore = Object.create(null);
-  const store = {
-    getItem(key) {
-      try { return store.getItem(key); } catch { return __memStore[key] ?? null; }
-    },
-    setItem(key, val) {
-      try { store.setItem(key, String(val)); } catch { __memStore[key] = String(val); }
-    },
-    removeItem(key) {
-      try { store.removeItem(key); } catch { delete __memStore[key]; }
-    }
-  };
-
-
   /* =========================
      Utilities
   ========================= */
@@ -176,40 +161,6 @@
       inp.select();
     });
   }
-
-  function chooseModal(title, subtitle, options, cancelText = "Cancel") {
-    // options: [{ id, label, hint? }]
-    return new Promise((resolve) => {
-      const overlay = el("div", { class: "modalOverlay" });
-      const modal = el("div", { class: "modal" });
-      modal.appendChild(el("div", { class: "modalTitle" }, [title]));
-      const body = el("div", { class: "modalBody" });
-      if (subtitle) body.appendChild(el("div", { class: "hint" }, [subtitle]));
-      const list = el("div", { class: "panelStack" });
-      for (const opt of options) {
-        const card = el("div", { class: "card" });
-        card.appendChild(el("div", { class: "cardTitle" }, [opt.label]));
-        if (opt.hint) card.appendChild(el("div", { class: "hint" }, [opt.hint]));
-        const btn = el("button", { class: "btn", onclick: () => { overlay.remove(); resolve(opt.id); } }, ["Select"]);
-        card.appendChild(btn);
-        list.appendChild(card);
-      }
-      body.appendChild(list);
-      modal.appendChild(body);
-
-      const row = el("div", { class: "modalRow" });
-      const btnCancel = el("button", {
-        class: "btn ghost",
-        onclick: () => { overlay.remove(); resolve(null); }
-      }, [cancelText]);
-      row.appendChild(btnCancel);
-      modal.appendChild(row);
-
-      overlay.appendChild(modal);
-      document.body.appendChild(overlay);
-    });
-  }
-
 
   /* =========================
      Geohash (encode + neighbors)
@@ -575,79 +526,6 @@
     }
     for (const s of data.stations) idx.stationsById.set(s.id, s);
     for (const j of data.jobs) idx.jobsById.set(j.id, j);
-    // v0.2 core injections (so you can update JSON later without breaking saves)
-    function __injectItem(item) {
-      if (!idx.itemsById.has(item.id)) {
-        data.items.push(item);
-        idx.itemsById.set(item.id, item);
-      }
-    }
-    function __injectJob(job) {
-      if (!idx.jobsById.has(job.id)) {
-        data.jobs.push(job);
-        idx.jobsById.set(job.id, job);
-      }
-    }
-
-    // Water containers (used by Gather Water)
-    __injectItem({
-      id: "bottle_empty",
-      name: "Empty Bottle",
-      category: "container",
-      stackSize: 20,
-      desc: "A small container that can hold water.",
-      container: { waterUnits: 1, gatherSeconds: 30 }
-    });
-    __injectItem({
-      id: "milk_jug_empty",
-      name: "Empty Milk Jug",
-      category: "container",
-      stackSize: 10,
-      desc: "A larger container.",
-      container: { waterUnits: 5, gatherSeconds: 60 }
-    });
-    __injectItem({
-      id: "bucket_empty",
-      name: "Empty Bucket",
-      category: "container",
-      stackSize: 5,
-      desc: "A big bucket (awkward but efficient).",
-      container: { waterUnits: 10, gatherSeconds: 120 }
-    });
-
-    // Basic water item (dirty)
-    __injectItem({
-      id: "water_dirty",
-      name: "Dirty Water",
-      category: "water",
-      stackSize: 99,
-      desc: "Drinkable in a pinch. Risk of sickness.",
-      water: { thirst: 25, dirty: true }
-    });
-
-    // Special jobs
-    __injectJob({
-      id: "gather_water",
-      name: "Gather Water",
-      baseMinutes: 1,
-      desc: "Fill a container with water (you choose the container).",
-      safe: true,
-      xpSkill: "Wilderness",
-      variant: "gather_water",
-      yields: []
-    });
-
-    __injectJob({
-      id: "explore",
-      name: "Explore Nearby Tile",
-      baseMinutes: 25,
-      desc: "Send a crew member to scout a nearby tile and return with loot (requires rations in pockets).",
-      safe: false,
-      xpSkill: "Wilderness",
-      variant: "explore",
-      yields: []
-    });
-
     for (const b of data.biomes) idx.biomesById.set(b.id, b);
     for (const n of data.npcs) idx.npcsById.set(n.id, n);
     for (const a of data.animals) idx.animalsById.set(a.id, a);
@@ -705,7 +583,6 @@
         // shared storage: stacks + individual instances
         storage: {
           capacity: 0, // computed from station effects
-          rationPrefs: {}, // itemId -> boolean (persist rations even when stacks hit 0)
           stacks: [
             // { itemId, qty, isRationAllowed? } (only for food)
           ],
@@ -745,8 +622,8 @@
     addItemToStorage(state, loadedData, "water_clean", 4);
     addItemToStorage(state, loadedData, "water_dirty", 1);
 
-    // v0.2: start with a basic container so Gather Water is immediately usable
-    addItemToStorage(state, loadedData, "bottle_empty", 1);
+    // Empty water bottle is more of a “concept” in v0.1; we model water as items.
+    // You can add a bottle item later as equipment/utility.
 
     recomputeDerivedStats(state, loadedData);
     pushLog(state, "Welcome aboard the Rusty Rambler.", "system");
@@ -885,24 +762,11 @@
       if (!st) {
         st = { itemId, qty: 0 };
         // Rations toggle only relevant for food category
-        if (def.category === "food") {
-          state.rv.storage.rationPrefs = state.rv.storage.rationPrefs || {};
-          const pref = state.rv.storage.rationPrefs[itemId];
-          st.isRationAllowed = opts.rationAllowed != null ? !!opts.rationAllowed : !!pref;
-          // If caller explicitly set it, persist the preference immediately
-          if (opts.rationAllowed != null) state.rv.storage.rationPrefs[itemId] = !!opts.rationAllowed;
-        }
+        if (def.category === "food") st.isRationAllowed = !!opts.rationAllowed;
         state.rv.storage.stacks.push(st);
       }
       st.qty += qty;
-
-      // Persist ration preference when explicitly provided
-      if (def.category === "food" && opts.rationAllowed != null) {
-        st.isRationAllowed = !!opts.rationAllowed;
-        state.rv.storage.rationPrefs = state.rv.storage.rationPrefs || {};
-        state.rv.storage.rationPrefs[itemId] = !!opts.rationAllowed;
-      }
-
+      if (def.category === "food" && opts.rationAllowed != null) st.isRationAllowed = !!opts.rationAllowed;
       return { ok: true };
     }
   }
@@ -931,177 +795,6 @@
       return true;
     }
   }
-
-  /* =========================
-     Pockets + Transfers (v0.2)
-     - Move stacks/instances between RV storage and crew pockets
-     - Enables equipping crafted gear, feeding from storage, and sending NPCs exploring
-  ========================= */
-
-  function countPocketsUsed(char) {
-    const stackUnits = (char.pockets?.stacks || []).reduce((a, s) => a + (s.qty || 0), 0);
-    const instUnits = (char.pockets?.instances || []).length || 0;
-    return stackUnits + instUnits;
-  }
-
-  function getPocketStack(char, itemId) {
-    return (char.pockets?.stacks || []).find(s => s.itemId === itemId) || null;
-  }
-
-  function addItemToPockets(state, loadedData, char, itemId, qty = 1) {
-    const { idx } = loadedData;
-    const def = idx.itemsById.get(itemId);
-    if (!def) return { ok: false, reason: "unknown item" };
-    if (!char?.pockets) return { ok: false, reason: "no pockets" };
-
-    // Capacity check (same unit model as RV storage in v0.1)
-    const used = countPocketsUsed(char);
-    const cap = char.pockets.capacity ?? 0;
-    if (cap > 0 && used + qty > cap) return { ok: false, reason: "pockets full" };
-
-    if (def.stackSize === 1) {
-      for (let i = 0; i < qty; i++) {
-        const inst = makeInstance(def);
-        char.pockets.instances.push(inst);
-      }
-      return { ok: true };
-    } else {
-      let st = getPocketStack(char, itemId);
-      if (!st) {
-        st = { itemId, qty: 0 };
-        char.pockets.stacks.push(st);
-      }
-      st.qty += qty;
-      return { ok: true };
-    }
-  }
-
-  function removeItemFromPockets(state, loadedData, char, itemId, qty = 1) {
-    const { idx } = loadedData;
-    const def = idx.itemsById.get(itemId);
-    if (!def) return false;
-    if (!char?.pockets) return false;
-
-    if (def.stackSize === 1) {
-      let removed = 0;
-      for (let i = char.pockets.instances.length - 1; i >= 0 && removed < qty; i--) {
-        if (char.pockets.instances[i].itemId === itemId) {
-          char.pockets.instances.splice(i, 1);
-          removed++;
-        }
-      }
-      return removed === qty;
-    } else {
-      const st = getPocketStack(char, itemId);
-      if (!st || st.qty < qty) return false;
-      st.qty -= qty;
-      if (st.qty <= 0) char.pockets.stacks = char.pockets.stacks.filter(x => x.qty > 0);
-      return true;
-    }
-  }
-
-  function removeInstanceByUid(arr, uid) {
-    const i = arr.findIndex(x => x.uid === uid);
-    if (i >= 0) return arr.splice(i, 1)[0];
-    return null;
-  }
-
-  function transferStackRvToChar(state, loadedData, charId, itemId, qty = 1) {
-    const char = state.crew.members.find(m => m.id === charId);
-    if (!char) return { ok: false, reason: "bad char" };
-
-    // capacity pre-check
-    const used = countPocketsUsed(char);
-    const cap = char.pockets.capacity ?? 0;
-    if (cap > 0 && used + qty > cap) return { ok: false, reason: "pockets full" };
-
-    if (!hasItemInStorage(state, loadedData, itemId, qty)) return { ok: false, reason: "not in storage" };
-    const remOk = removeItemFromStorage(state, loadedData, itemId, qty);
-    if (!remOk) return { ok: false, reason: "remove failed" };
-
-    const add = addItemToPockets(state, loadedData, char, itemId, qty);
-    if (!add.ok) {
-      // rollback
-      addItemToStorage(state, loadedData, itemId, qty);
-      return add;
-    }
-    safetySnapshot(state, loadedData);
-    return { ok: true };
-  }
-
-  function transferStackCharToRv(state, loadedData, charId, itemId, qty = 1) {
-    const char = state.crew.members.find(m => m.id === charId);
-    if (!char) return { ok: false, reason: "bad char" };
-
-    if (!removeItemFromPockets(state, loadedData, char, itemId, qty)) return { ok: false, reason: "not in pockets" };
-    const add = addItemToStorage(state, loadedData, itemId, qty);
-    if (!add.ok) {
-      // rollback
-      addItemToPockets(state, loadedData, char, itemId, qty);
-      return add;
-    }
-    safetySnapshot(state, loadedData);
-    return { ok: true };
-  }
-
-  function transferInstanceRvToChar(state, loadedData, charId, instUid) {
-    const char = state.crew.members.find(m => m.id === charId);
-    if (!char) return { ok: false, reason: "bad char" };
-
-    const used = countPocketsUsed(char);
-    const cap = char.pockets.capacity ?? 0;
-    if (cap > 0 && used + 1 > cap) return { ok: false, reason: "pockets full" };
-
-    const inst = removeInstanceByUid(state.rv.storage.instances, instUid);
-    if (!inst) return { ok: false, reason: "not in storage" };
-
-    char.pockets.instances.push(inst);
-    safetySnapshot(state, loadedData);
-    return { ok: true, inst };
-  }
-
-  function transferInstanceCharToRv(state, loadedData, charId, instUid) {
-    const char = state.crew.members.find(m => m.id === charId);
-    if (!char) return { ok: false, reason: "bad char" };
-
-    const inst = removeInstanceByUid(char.pockets.instances, instUid);
-    if (!inst) return { ok: false, reason: "not in pockets" };
-
-    // Capacity check
-    const used = countStorageUsed(state, loadedData);
-    const cap = state.rv.storage.capacity || 0;
-    if (cap > 0 && used + 1 > cap) {
-      char.pockets.instances.push(inst);
-      return { ok: false, reason: "storage full" };
-    }
-
-    state.rv.storage.instances.push(inst);
-
-    // If it was equipped, unequip
-    for (const slot of Object.keys(char.equipment)) {
-      if (char.equipment[slot] === instUid) char.equipment[slot] = null;
-    }
-
-    safetySnapshot(state, loadedData);
-    return { ok: true };
-  }
-
-  function dropFromRvStorage(state, loadedData, itemId, qty = 1) {
-    const ok = removeItemFromStorage(state, loadedData, itemId, qty);
-    if (!ok) return { ok: false, reason: "not enough" };
-    pushLog(state, `Dropped ${qty}× ${(loadedData.idx.itemsById.get(itemId)?.name ?? itemId)}.`, "info", null, loadedData);
-    safetySnapshot(state, loadedData);
-    return { ok: true };
-  }
-
-  function dropInstanceFromRvStorage(state, loadedData, instUid) {
-    const inst = removeInstanceByUid(state.rv.storage.instances, instUid);
-    if (!inst) return { ok: false, reason: "not found" };
-    pushLog(state, `Dropped ${(loadedData.idx.itemsById.get(inst.itemId)?.name ?? inst.itemId)}.`, "info", null, loadedData);
-    safetySnapshot(state, loadedData);
-    return { ok: true };
-  }
-
 
   function hasItemInStorage(state, loadedData, itemId, qty = 1) {
     const { idx } = loadedData;
@@ -1267,66 +960,6 @@
   }
 
   /* =========================
-     XP + Leveling (v0.2)
-  ========================= */
-
-  function xpToNext(level, base = 100, growth = 1.35) {
-    // Level starts at 0 (untrained) or 1+; this function accepts current level and returns XP needed to gain +1.
-    // A gentle curve that still makes early progress visible.
-    const lv = Math.max(0, Number(level) || 0);
-    return Math.round(base * Math.pow(growth, lv));
-  }
-
-  function processLevelUps(state, loadedData, char) {
-    const cfg = loadedData?.data?.config || {};
-    const base = cfg?.xp?.base ?? 100;
-    const growth = cfg?.xp?.growth ?? 1.35;
-
-    const leveled = [];
-    for (const skill of Object.keys(char.xp || {})) {
-      // ensure stat exists
-      if (char.stats[skill] == null) char.stats[skill] = 0;
-
-      let xp = char.xp[skill] || 0;
-      let needed = xpToNext(char.stats[skill], base, growth);
-      let ups = 0;
-
-      while (xp >= needed && ups < 25) {
-        xp -= needed;
-        char.stats[skill] = (char.stats[skill] || 0) + 1;
-        ups++;
-        needed = xpToNext(char.stats[skill], base, growth);
-      }
-
-      if (ups > 0) {
-        char.xp[skill] = xp;
-        leveled.push({ skill, ups });
-      }
-    }
-
-    if (leveled.length) {
-      for (const it of leveled) {
-        pushLog(state, `${char.name} leveled up: ${it.skill} +${it.ups}.`, "good", char.id, loadedData);
-      }
-      toast(`${char.name} leveled up!`);
-    }
-
-    return leveled;
-  }
-
-  function xpProgressLine(state, loadedData, char, skill) {
-    const cfg = loadedData?.data?.config || {};
-    const base = cfg?.xp?.base ?? 100;
-    const growth = cfg?.xp?.growth ?? 1.35;
-
-    const level = char.stats?.[skill] ?? 0;
-    const xp = char.xp?.[skill] ?? 0;
-    const need = xpToNext(level, base, growth);
-    return `${skill}: L${level} — ${xp}/${need} XP`;
-  }
-
-
-  /* =========================
      Auto-consume (rations)
   ========================= */
   function maybeAutoConsume(state, loadedData, char) {
@@ -1425,67 +1058,6 @@
     pushLog(state, `${char.name} ate rations.`, "info", char.id, loadedData);
     return true;
   }
-
-  function consumeFoodFromStorage(state, loadedData, char, itemId) {
-    const { idx } = loadedData;
-    if (!hasItemInStorage(state, loadedData, itemId, 1)) return { ok: false, reason: "not in storage" };
-    const def = idx.itemsById.get(itemId);
-    if (!def?.food) return { ok: false, reason: "not food" };
-
-    removeItemFromStorage(state, loadedData, itemId, 1);
-
-    const hunger = def.food.hunger ?? 10;
-    char.needs.hunger = clamp(char.needs.hunger + hunger, 0, 100);
-
-    const morale = def.food.morale ?? 0;
-    char.needs.morale = clamp(char.needs.morale + morale, 0, 100);
-
-    const q = def.food.quality || "low";
-    if (q === "low") applyMoodlet(char, { id: "m_slop", name: "Ate Slop", endsAt: gameNow(state) + 2 * 60 * 60 * 1000, moraleDelta: -2, note: "Not your finest meal." });
-    if (q === "mid") applyMoodlet(char, { id: "m_full", name: "Ate Okay", endsAt: gameNow(state) + 2 * 60 * 60 * 1000, moraleDelta: 0, note: "Good enough." });
-    if (q === "high") applyMoodlet(char, { id: "m_tasty", name: "Ate Well", endsAt: gameNow(state) + 3 * 60 * 60 * 1000, moraleDelta: +2, note: "Actually delicious." });
-
-    // Raw food sickness chance
-    if (def.food.raw) {
-      const grit = effectiveSkill(char, "Grit");
-      const chance = clamp(0.25 - (grit * 0.01), 0.06, 0.28);
-      if (Math.random() < chance) {
-        applySickness(state, loadedData, char, "Food Poisoning", 2 * 60 * 60 * 1000);
-      }
-    }
-
-    pushLog(state, `${char.name} ate ${def.name}.`, "info", char.id, loadedData);
-    safetySnapshot(state, loadedData);
-    return { ok: true };
-  }
-
-  function consumeWaterFromStorage(state, loadedData, char, itemId) {
-    const { idx } = loadedData;
-    if (!hasItemInStorage(state, loadedData, itemId, 1)) return { ok: false, reason: "not in storage" };
-    const def = idx.itemsById.get(itemId);
-    if (!def?.water) return { ok: false, reason: "not water" };
-
-    removeItemFromStorage(state, loadedData, itemId, 1);
-
-    const thirst = def.water.thirst ?? 10;
-    char.needs.thirst = clamp(char.needs.thirst + thirst, 0, 100);
-
-    // Dirty water sickness chance
-    if (def.water.dirty) {
-      const grit = effectiveSkill(char, "Grit");
-      const med = effectiveSkill(char, "Medical");
-      const chance = clamp(0.18 - (grit * 0.01) - (med * 0.01), 0.04, 0.25);
-      if (Math.random() < chance) {
-        applySickness(state, loadedData, char, "Dirty Water Sickness", 3 * 60 * 60 * 1000);
-      }
-      applyMoodlet(char, { id: "m_grosswater", name: "Ugh. Dirty Water", endsAt: gameNow(state) + 30 * 60 * 1000, moraleDelta: -3, note: "You can taste the pond." });
-    }
-
-    pushLog(state, `${char.name} drank ${def.name}.`, "info", char.id, loadedData);
-    safetySnapshot(state, loadedData);
-    return { ok: true };
-  }
-
 
   function applySickness(state, loadedData, char, name, durationMs) {
     const t = gameNow(state);
@@ -1614,8 +1186,7 @@
     return { dur: 1.0, yield: 1.0, risk: 1.0 };
   }
 
-  function startJobForChar(state, loadedData, charId, jobId, pace = "normal", opts = null) {
-    opts = opts || {};
+  function startJobForChar(state, loadedData, charId, jobId, pace = "normal") {
     const { idx } = loadedData;
     const char = state.crew.members.find(m => m.id === charId);
     if (!char) return { ok: false, reason: "bad char" };
@@ -1637,8 +1208,7 @@
     }
 
     const mult = paceMultipliers(pace);
-    const baseDurationMs = Math.round((job.baseSec || 600) * mult.dur) * 1000;
-    const durationMs = (opts.durationMs != null) ? Math.max(1000, Math.round(opts.durationMs)) : baseDurationMs;
+    const durationSec = Math.round((job.baseSec || 600) * mult.dur);
 
     const entry = {
       id: uid("job"),
@@ -1646,10 +1216,9 @@
       pace,
       createdAt: gameNow(state),
       startAt: null,
-      durationMs,
+      durationMs: durationSec * 1000,
       toolOk,
-      tileId: (opts.tileId != null ? opts.tileId : state.meta.lastTileId),
-      meta: opts.meta || null,
+      tileId: state.meta.lastTileId,
       completed: false
     };
 
@@ -1666,41 +1235,6 @@
     safetySnapshot(state, loadedData);
     return { ok: true };
   }
-
-  function cancelQueuedJob(state, loadedData, charId, jobEntryId) {
-    const q = state.queues.jobsByCharId[charId] || [];
-    const idx = q.findIndex(j => j.id === jobEntryId);
-    if (idx < 0) return { ok: false, reason: "not found" };
-
-    const [removed] = q.splice(idx, 1);
-
-    // If we cancelled the currently running job (idx === 0), allow the next one to start immediately
-    if (idx === 0 && q[0] && q[0].startAt == null) q[0].startAt = gameNow(state);
-
-    // Restore reserved rations for exploration if the task was cancelled
-    const char = state.crew.members.find(m => m.id === charId);
-    if (char && removed?.meta?.rationsConsumed?.length) {
-      for (const rc of removed.meta.rationsConsumed) {
-        addItemToPockets(state, loadedData, char, rc.itemId, rc.qty || 1);
-      }
-      removed.meta.rationsConsumed = [];
-    }
-
-    const name = loadedData.idx.jobsById.get(removed.jobId)?.name ?? removed.jobId;
-    pushLog(state, `Cancelled ${name} for ${char?.name ?? "crew"}.`, "info", charId, loadedData);
-    safetySnapshot(state, loadedData);
-    return { ok: true };
-  }
-
-  function clearJobQueue(state, loadedData, charId) {
-    const q = state.queues.jobsByCharId[charId] || [];
-    if (!q.length) return { ok: false, reason: "empty" };
-    state.queues.jobsByCharId[charId] = [];
-    pushLog(state, `Cleared job queue for ${state.crew.members.find(m => m.id === charId)?.name ?? "crew"}.`, "info", charId, loadedData);
-    safetySnapshot(state, loadedData);
-    return { ok: true };
-  }
-
 
   function tickJobQueues(state, loadedData) {
     const { idx, data } = loadedData;
@@ -1795,77 +1329,22 @@
       (1 + (char.conditions.injury?.severity === "major" ? 0.35 : 0));
 
     // Roll yields
-    // v0.2 special jobs
-    if (jEntry.meta?.special === "gather_water") {
-      const waterId = jEntry.meta.waterItemId || "water_dirty";
-      const qty = Math.max(0, Math.floor(Number(jEntry.meta.waterQty || 0)));
+    const rng = mulberry32(hashStringToUint(`${data.config.worldSeed}::${jEntry.id}`));
+    const gained = [];
+
+    for (const y of (job.yields || [])) {
+      const min = y.min ?? 0;
+      const max = y.max ?? min;
+      let qty = Math.floor(min + rng() * (max - min + 1));
+      qty = Math.max(0, Math.round(qty * yieldMult));
       if (qty > 0) {
-        const ok = addItemToStorage(state, loadedData, waterId, qty);
-        if (ok.ok) pushLog(state, `${char.name} gathered ${qty}× ${(loadedData.idx.itemsById.get(waterId)?.name ?? waterId)}.`, "good", charId, loadedData);
-        else pushLog(state, `Storage full — couldn't store gathered water.`, "warn", charId, loadedData);
-      }
-    } else if (jEntry.meta?.special === "explore") {
-      const actionJobId = jEntry.meta.actionJobId;
-      const actionJob = actionJobId ? loadedData.idx.jobsById.get(actionJobId) : null;
-
-      const rng = mulberry32(hashStringToUint(`${state.rngSeed}|${state.time.ticks}|${jEntry.id}`));
-      const toolTier = getToolTierForJob(state, loadedData, char, actionJob || job);
-      const wild = effectiveSkill(char, "Wilderness");
-      const wits = effectiveSkill(char, "Wits");
-      const grit = effectiveSkill(char, "Grit");
-
-      const successChance = clamp(0.55 + (wild * 0.02) + (wits * 0.01) + (toolTier * 0.04), 0.25, 0.95);
-      const success = (Math.random() < successChance);
-
-      if (success && actionJob?.yields?.length) {
-        const biome = loadedData.idx.biomesById.get(tile.biomeId);
-        const yieldMult = clamp(1 + (toolTier * 0.15) + (wild * 0.02), 0.5, 3.5) * (1.10 + grit * 0.01);
-
-        for (const y of actionJob.yields) {
-          if ((y.chance ?? 1) < 1 && rng() > y.chance) continue;
-          let qty = randInt(rng, y.min ?? 1, y.max ?? (y.min ?? 1));
-          if (biome?.yieldMult?.[y.id]) qty = Math.ceil(qty * biome.yieldMult[y.id]);
-          qty = Math.max(0, Math.floor(qty * yieldMult));
-          if (qty > 0) {
-            const ok = addItemToStorage(state, loadedData, y.id, qty);
-            if (!ok.ok) { pushLog(state, "Storage full — exploration loot was lost.", "warn", charId, loadedData); break; }
-          }
-        }
-        pushLog(state, `${char.name} explored and returned with loot.`, "good", charId, loadedData);
-      } else {
-        pushLog(state, `${char.name} explored but found nothing useful.`, "info", charId, loadedData);
-      }
-
-      // extra injury chance when exploring
-      const extra = clamp(0.10 - (grit * 0.01), 0.02, 0.12);
-      if (Math.random() < extra) applyInjury(state, loadedData, char, "minor");
-    } else {
-      const rng = mulberry32(hashStringToUint(`${state.rngSeed}|${state.time.ticks}|${jEntry.id}`));
-      const biome = loadedData.idx.biomesById.get(tile.biomeId);
-
-      // Determine tool tier from equipment (if job wants it)
-      const toolTier = getToolTierForJob(state, loadedData, char, job);
-
-      // Yield multiplier based on skill and tool
-      const skill = job.xpSkill ? effectiveSkill(char, job.xpSkill) : 0;
-      const yieldMult = clamp(1 + (toolTier * 0.15) + (skill * 0.02), 0.5, 3.5);
-
-      const yields = job.yields || [];
-      const got = [];
-
-      for (const y of yields) {
-        if ((y.chance ?? 1) < 1 && rng() > y.chance) continue;
-        let qty = randInt(rng, y.min ?? 1, y.max ?? (y.min ?? 1));
-        if (biome?.yieldMult?.[y.id]) qty = Math.ceil(qty * biome.yieldMult[y.id]);
-        qty = Math.max(0, Math.floor(qty * yieldMult));
-        if (qty > 0) {
-          const ok = addItemToStorage(state, loadedData, y.id, qty);
-          if (ok.ok) got.push(`${qty}× ${loadedData.idx.itemsById.get(y.id)?.name ?? y.id}`);
-          else { pushLog(state, "Storage full — couldn't store yields.", "warn", charId, loadedData); break; }
+        const ok = addItemToStorage(state, loadedData, y.id, qty);
+        if (ok.ok) gained.push({ id: y.id, qty });
+        else {
+          // storage full: drop it (MVP)
+          pushLog(state, `Storage full. ${char.name} couldn't store ${qty}× ${idx.itemsById.get(y.id)?.name ?? y.id}.`, "bad", char.id, loadedData);
         }
       }
-
-      if (got.length) pushLog(state, `${char.name} gained: ${got.join(", ")}.`, "good", charId, loadedData);
     }
 
     // Risk outcomes
@@ -1901,8 +1380,6 @@
     if (job.xpSkill) {
       const xpGain = Math.round(10 + mins * 2 + (toolTier * 2));
       char.xp[job.xpSkill] = (char.xp[job.xpSkill] || 0) + xpGain;
-      pushLog(state, `${char.name} gained ${xpGain} XP in ${job.xpSkill}.`, "info", char.id, loadedData);
-      processLevelUps(state, loadedData, char);
     }
 
     // Morale adjustments from outcomes
@@ -2113,11 +1590,11 @@
      Saves (manual slots + safety snapshot)
   ========================= */
   function loadAllSaves() {
-    return safeJsonParse(store.getItem(LS_SAVES_KEY), []);
+    return safeJsonParse(localStorage.getItem(LS_SAVES_KEY), []);
   }
 
   function saveAllSaves(list) {
-    store.setItem(LS_SAVES_KEY, JSON.stringify(list));
+    localStorage.setItem(LS_SAVES_KEY, JSON.stringify(list));
   }
 
   function safetySnapshot(state, loadedData) {
@@ -2129,7 +1606,7 @@
       ts: nowReal(),
       state
     };
-    store.setItem(LS_SNAPSHOT_KEY, JSON.stringify(snap));
+    localStorage.setItem(LS_SNAPSHOT_KEY, JSON.stringify(snap));
   }
 
   function createSaveSlot(name, state) {
@@ -2137,7 +1614,7 @@
     const id = uid("save");
     saves.push({ id, name: name || "Unnamed Save", ts: nowReal(), state });
     saveAllSaves(saves);
-    store.setItem(LS_LAST_ACTIVE_SAVE_KEY, id);
+    localStorage.setItem(LS_LAST_ACTIVE_SAVE_KEY, id);
     return id;
   }
 
@@ -2148,7 +1625,7 @@
     s.ts = nowReal();
     s.state = state;
     saveAllSaves(saves);
-    store.setItem(LS_LAST_ACTIVE_SAVE_KEY, saveId);
+    localStorage.setItem(LS_LAST_ACTIVE_SAVE_KEY, saveId);
     return true;
   }
 
@@ -2156,8 +1633,8 @@
     let saves = loadAllSaves();
     saves = saves.filter(x => x.id !== saveId);
     saveAllSaves(saves);
-    const last = store.getItem(LS_LAST_ACTIVE_SAVE_KEY);
-    if (last === saveId) store.removeItem(LS_LAST_ACTIVE_SAVE_KEY);
+    const last = localStorage.getItem(LS_LAST_ACTIVE_SAVE_KEY);
+    if (last === saveId) localStorage.removeItem(LS_LAST_ACTIVE_SAVE_KEY);
   }
 
   function getSaveSlot(saveId) {
@@ -2166,7 +1643,7 @@
   }
 
   function getSnapshot() {
-    return safeJsonParse(store.getItem(LS_SNAPSHOT_KEY), null);
+    return safeJsonParse(localStorage.getItem(LS_SNAPSHOT_KEY), null);
   }
 
   /* =========================
@@ -2229,7 +1706,6 @@
     btnStorage: null,
     btnStations: null,
     btnSaves: null,
-    btnAdmin: null,
 
     panel: null,
     panelTitle: null,
@@ -2282,9 +1758,8 @@
     UI.btnStorage = el("button", { class: "btn", id: "btnStorage" }, ["Storage"]);
     UI.btnStations = el("button", { class: "btn", id: "btnStations" }, ["Stations"]);
     UI.btnSaves = el("button", { class: "btn ghost", id: "btnSaves" }, ["Saves"]);
-    UI.btnAdmin = el("button", { class: "btn ghost", id: "btnAdmin" }, ["Admin"]);
 
-    buttons.append(UI.btnCheckLocation, UI.btnActions, UI.btnCrafting, UI.btnCrew, UI.btnStorage, UI.btnStations, UI.btnSaves, UI.btnAdmin);
+    buttons.append(UI.btnCheckLocation, UI.btnActions, UI.btnCrafting, UI.btnCrew, UI.btnStorage, UI.btnStations, UI.btnSaves);
 
     // Log box
     UI.logBox = el("div", { class: "logBox" }, [
@@ -2489,105 +1964,9 @@
 
       const btn = el("button", {
         class: "btn",
-        onclick: async () => {
+        onclick: () => {
           const charId = sel.value;
           const pace = paceSel.value;
-
-          // v0.2 special job flows
-          if (j.variant === "gather_water" || j.id === "gather_water") {
-            const containers = (state.rv.storage.stacks || [])
-              .map(s => ({ s, def: loadedData.idx.itemsById.get(s.itemId) }))
-              .filter(x => x.def?.category === "container" && x.s.qty > 0);
-
-            if (!containers.length) return toast("No containers in storage. Find or craft an Empty Bottle / Jug / Bucket.");
-
-            const options = containers.map(x => {
-              const units = x.def.container?.waterUnits ?? 1;
-              const secs = x.def.container?.gatherSeconds ?? 30;
-              return {
-                id: x.def.id,
-                label: `${x.def.name} (x${x.s.qty})`,
-                hint: `Carries ${units} water • ${secs}s`
-              };
-            });
-
-            const containerId = await chooseModal("Gather Water", "Choose a container from RV storage:", options);
-            if (!containerId) return;
-
-            const def = loadedData.idx.itemsById.get(containerId);
-            const units = def?.container?.waterUnits ?? 1;
-            const secs = def?.container?.gatherSeconds ?? 30;
-
-            const res = startJobForChar(state, loadedData, charId, j.id, pace, {
-              durationMs: secs * 1000,
-              meta: { special: "gather_water", containerItemId: containerId, waterItemId: "water_dirty", waterQty: units }
-            });
-
-            if (!res.ok) toast(res.reason);
-            else {
-              renderAll(state, loadedData);
-              showPanel("Actions", panelActions(state, loadedData));
-            }
-            return;
-          }
-
-          if (j.variant === "explore" || j.id === "explore") {
-            const char = state.crew.members.find(c => c.id === charId);
-            if (!char) return toast("Crew member not found.");
-
-            // Require rations in pockets (1 food + 1 water)
-            const pocketFood = (char.pockets.stacks || []).find(st => loadedData.idx.itemsById.get(st.itemId)?.category === "food" && st.qty > 0);
-            const pocketWater = (char.pockets.stacks || []).find(st => loadedData.idx.itemsById.get(st.itemId)?.category === "water" && st.qty > 0);
-
-            if (!pocketFood || !pocketWater) return toast("Exploration requires 1 food + 1 water in pockets. Transfer supplies to pockets first.");
-
-            // Choose exploration action (reuses yields from an existing job if available)
-            const actionCandidates = ["forage", "scavenge", "hunt", "fish"].filter(id => loadedData.idx.jobsById.has(id));
-            const actOptions = (actionCandidates.length ? actionCandidates : ["forage"]).map(id => ({
-              id,
-              label: loadedData.idx.jobsById.get(id)?.name ?? id,
-              hint: loadedData.idx.jobsById.get(id)?.desc ?? ""
-            }));
-
-            const actionJobId = await chooseModal("Explore", "What should they do while exploring?", actOptions);
-            if (!actionJobId) return;
-
-            const dirOptions = [
-              { id: "N", label: "North", hint: "" },
-              { id: "S", label: "South", hint: "" },
-              { id: "E", label: "East", hint: "" },
-              { id: "W", label: "West", hint: "" }
-            ];
-            const direction = await chooseModal("Explore", "Pick a direction to scout:", dirOptions);
-            if (!direction) return;
-
-            // Reserve rations (consume from pockets now; restored if the task is cancelled)
-            const consumed = [];
-            if (removeItemFromPockets(state, loadedData, char, pocketFood.itemId, 1)) consumed.push({ itemId: pocketFood.itemId, qty: 1 });
-            if (removeItemFromPockets(state, loadedData, char, pocketWater.itemId, 1)) consumed.push({ itemId: pocketWater.itemId, qty: 1 });
-
-            if (consumed.length < 2) {
-              // rollback if something went weird
-              for (const rc of consumed) addItemToPockets(state, loadedData, char, rc.itemId, rc.qty);
-              return toast("Couldn't reserve rations. Try again.");
-            }
-
-            const res = startJobForChar(state, loadedData, charId, j.id, pace, {
-              meta: { special: "explore", actionJobId, direction, rationsConsumed: consumed }
-            });
-
-            if (!res.ok) {
-              // rollback rations if we failed to queue
-              for (const rc of consumed) addItemToPockets(state, loadedData, char, rc.itemId, rc.qty);
-              toast(res.reason);
-            } else {
-              renderAll(state, loadedData);
-              showPanel("Actions", panelActions(state, loadedData));
-            }
-            return;
-          }
-
-          // normal job
           const res = startJobForChar(state, loadedData, charId, j.id, pace);
           if (!res.ok) toast(res.reason);
           else {
@@ -2728,7 +2107,7 @@
   function panelCrew(state, loadedData) {
     const wrap = el("div", { class: "panelStack" });
     wrap.appendChild(el("div", { class: "hint" }, [
-      "Crew members auto-eat and drink from RV storage (rations only). You can now transfer items/gear between RV storage and pockets, feed/drink manually from Storage, and cancel queued tasks."
+      "Crew members auto-eat and drink from RV storage (rations only). Equip tools/armor to improve job success."
     ]));
 
     for (const c of state.crew.members) {
@@ -2743,7 +2122,7 @@
       const morale = Math.round(clamp(c.needs.morale + currentMoraleModifier(c), 0, 100));
 
       card.appendChild(el("div", { class: "cardBody" }, [
-        el("div", { class: "smallLabel" }, [`Hunger: ${Math.round(c.needs.hunger)} • Thirst: ${Math.round(c.needs.thirst)} • Morale: ${morale} • Health: ${Math.round(c.needs.health)}`]),
+        el("div", { class: "smallLabel" }, [`Hunger: ${Math.round(c.needs.hunger)} • Thirst: ${Math.round(c.needs.thirst)} • Morale: ${morale}`]),
         el("div", { class: "smallLabel" }, [status.length ? `Status: ${status.join(", ")}` : "Status: OK"]),
         c.perk ? el("div", { class: "hint" }, [`Perk: ${c.perk.name} — ${c.perk.desc}`]) : el("div", { class: "hint" }, ["Perk: —"]),
         c.quirk ? el("div", { class: "hint" }, [`Quirk: ${c.quirk.name} — ${c.quirk.desc}`]) : el("div", { class: "hint" }, ["Quirk: —"])
@@ -2752,15 +2131,6 @@
       // Stats view
       const statsLine = Object.keys(c.stats).map(k => `${k}: ${effectiveSkill(c, k)}`).join(" • ");
       card.appendChild(el("div", { class: "hint" }, [statsLine]));
-
-      // XP view
-      const xpLines = Object.keys(c.xp || {}).map(skill => xpProgressLine(state, loadedData, c, skill));
-      if (xpLines.length) {
-        const xpBox = el("div", { class: "hint" });
-        xpBox.textContent = `XP:\n${xpLines.join("\n")}`;
-        xpBox.style.whiteSpace = "pre-line";
-        card.appendChild(xpBox);
-      }
 
       // Idle behavior selector
       const idleRow = el("div", { class: "row" });
@@ -2784,69 +2154,28 @@
       idleRow.appendChild(idleSel);
 
       // Equipment
-      const eqBtn = el("button", {
-        class: "btn",
-        onclick: () => showPanel("Equipment", panelEquipment(state, loadedData, c.id))
-      }, ["Equipment"]);
+      const eqBtn = el("button", { class: "btn", onclick: () => showPanel("Equipment", panelEquipment(state, loadedData, c.id)) }, ["Equipment"]);
       idleRow.appendChild(eqBtn);
 
       card.appendChild(idleRow);
 
-      // Job queue with cancel controls
+      // Job queue summary
       const q = state.queues.jobsByCharId[c.id] || [];
-      const qWrap = el("div", { class: "panelStack" });
-
-      const qHeader = el("div", { class: "row" });
-      qHeader.appendChild(el("div", { class: "smallLabel" }, [`Queue: ${q.length ? q.length + " task(s)" : "empty"}`]));
-
-      if (q.length) {
-        const btnClear = el("button", {
-          class: "btn ghost",
-          onclick: async () => {
-            const ok = await confirmModal("Clear Queue", `Clear all queued tasks for <b>${c.name}</b>?`, "Clear", "Cancel");
-            if (!ok) return;
-            clearJobQueue(state, loadedData, c.id);
-            renderAll(state, loadedData);
-            showPanel("Crew", panelCrew(state, loadedData));
-          }
-        }, ["Clear"]);
-        qHeader.appendChild(btnClear);
-      }
-      qWrap.appendChild(qHeader);
-
-      if (q.length) {
+      const qBox = el("div", { class: "hint" });
+      if (q.length === 0) qBox.textContent = "Queue: empty.";
+      else {
         const t = gameNow(state);
-        for (let i = 0; i < q.length; i++) {
-          const j = q[i];
+        const lines = q.map((j, i) => {
           const def = loadedData.idx.jobsById.get(j.jobId);
           const ends = (j.startAt || t) + j.durationMs;
           const left = Math.max(0, ends - t);
-          const isActive = (i === 0 && j.startAt != null);
-
-          const row = el("div", { class: "card" });
-          row.appendChild(el("div", { class: "cardTitle" }, [`${isActive ? "▶ " : ""}${def?.name ?? j.jobId}`]));
-          row.appendChild(el("div", { class: "hint" }, [`${isActive ? "Running" : "Queued"} • ${fmtTime(left)} remaining`]));
-
-          const btnRow = el("div", { class: "row" });
-
-          const btnCancel = el("button", {
-            class: "btn ghost",
-            onclick: async () => {
-              const ok = await confirmModal("Cancel Task", `Cancel <b>${def?.name ?? j.jobId}</b> for <b>${c.name}</b>?`, "Cancel Task", "Keep");
-              if (!ok) return;
-              cancelQueuedJob(state, loadedData, c.id, j.id);
-              renderAll(state, loadedData);
-              showPanel("Crew", panelCrew(state, loadedData));
-            }
-          }, ["Cancel"]);
-          btnRow.appendChild(btnCancel);
-
-          row.appendChild(btnRow);
-          qWrap.appendChild(row);
-        }
+          return `${i === 0 ? "▶" : "•"} ${def?.name ?? j.jobId} — ${fmtTime(left)} remaining`;
+        });
+        qBox.textContent = `Queue:\n${lines.join("\n")}`;
+        qBox.style.whiteSpace = "pre-line";
       }
+      card.appendChild(qBox);
 
-      card.appendChild(qWrap);
       wrap.appendChild(card);
     }
 
@@ -2854,322 +2183,122 @@
   }
 
   function panelEquipment(state, loadedData, charId) {
-    const wrap = el("div", { class: "panelStack" });
+    const { idx } = loadedData;
     const char = state.crew.members.find(m => m.id === charId);
+    const wrap = el("div", { class: "panelStack" });
     if (!char) {
-      wrap.appendChild(el("div", { class: "hint" }, ["Character not found."]));
+      wrap.appendChild(el("div", { class: "hint bad" }, ["Character not found."]));
       return wrap;
     }
 
-    const used = countPocketsUsed(char);
-    const cap = char.pockets.capacity ?? 0;
-    wrap.appendChild(el("div", { class: "hint" }, [
-      `Pockets: ${used}/${cap || "∞"} units. Equip tools/armor from pockets. Use Storage to transfer items/gear into pockets.`
-    ]));
+    wrap.appendChild(el("div", { class: "hint" }, ["Equip tools and armor from the character’s pockets (MVP). Later we’ll add moving items between RV storage and pockets more deeply."]));
 
-    // Equipped slots
-    const slotCard = el("div", { class: "card" });
-    slotCard.appendChild(el("div", { class: "cardTitle" }, ["Equipped"]));
-
-    const slotList = el("div", { class: "panelStack" });
-    for (const slot of Object.keys(char.equipment)) {
-      const instUid = char.equipment[slot];
-      const inst = instUid ? (char.pockets.instances.find(x => x.uid === instUid) || state.rv.storage.instances.find(x => x.uid === instUid) || null) : null;
-      const def = inst ? loadedData.idx.itemsById.get(inst.itemId) : null;
-
-      const row = el("div", { class: "row" });
-      row.appendChild(el("div", { class: "smallLabel" }, [`${slot}: ${def?.name ?? "—"}`]));
-
-      if (instUid) {
-        const btn = el("button", {
-          class: "btn ghost",
-          onclick: () => {
-            char.equipment[slot] = null;
-            safetySnapshot(state, loadedData);
-            toast("Unequipped.");
-            renderAll(state, loadedData);
-            showPanel("Equipment", panelEquipment(state, loadedData, charId));
-          }
-        }, ["Unequip"]);
-        row.appendChild(btn);
+    function slotLine(slotName, label) {
+      const u = char.equipment[slotName];
+      let txt = "Empty";
+      if (u) {
+        const inst = char.pockets.instances.find(i => i.uid === u);
+        const def = inst ? idx.itemsById.get(inst.itemId) : null;
+        txt = def ? `${def.name}${inst?.durability != null ? ` (Dur ${inst.durability})` : ""}` : "Unknown";
       }
-      slotList.appendChild(row);
+      return el("div", { class: "smallLabel" }, [`${label}: ${txt}`]);
     }
-    slotCard.appendChild(slotList);
-    wrap.appendChild(slotCard);
 
-    // Pocket Instances (gear)
-    const instCard = el("div", { class: "card" });
-    instCard.appendChild(el("div", { class: "cardTitle" }, ["Pockets — Gear"]));
+    wrap.appendChild(slotLine("mainHand", "Main Hand"));
+    wrap.appendChild(slotLine("utility", "Utility"));
+    wrap.appendChild(slotLine("body", "Body"));
+    wrap.appendChild(slotLine("legs", "Legs"));
 
-    const instList = el("div", { class: "panelStack" });
-    const pocketInst = char.pockets.instances || [];
-    if (!pocketInst.length) instList.appendChild(el("div", { class: "hint" }, ["No gear in pockets. Transfer gear from Storage."]));
-    for (const inst of pocketInst) {
-      const def = loadedData.idx.itemsById.get(inst.itemId);
-      const isEquippable = !!(def?.tool || def?.armor);
-      const name = def?.name ?? inst.itemId;
-      const durTxt = (inst.durability != null) ? `Durability: ${inst.durability}` : "Durability: —";
+    wrap.appendChild(el("div", { class: "divider" }));
+    wrap.appendChild(el("div", { class: "cardTitle" }, ["Pocket Items (Equipable)"]));
 
+    const items = char.pockets.instances
+      .map(inst => ({ inst, def: idx.itemsById.get(inst.itemId) }))
+      .filter(x => x.def && x.def.equipSlot);
+
+    if (items.length === 0) {
+      wrap.appendChild(el("div", { class: "hint" }, ["No equipable items in pockets yet. Craft some tools!"]));
+      return wrap;
+    }
+
+    for (const it of items) {
       const card = el("div", { class: "card" });
-      card.appendChild(el("div", { class: "cardTitle" }, [name]));
-      card.appendChild(el("div", { class: "hint" }, [durTxt]));
+      const d = it.def;
+      const dur = it.inst.durability != null ? ` • Dur ${it.inst.durability}` : "";
+      card.appendChild(el("div", { class: "cardTitle" }, [d.name]));
+      card.appendChild(el("div", { class: "hint" }, [`Slot: ${d.equipSlot}${dur}`]));
+      if (d.tool) card.appendChild(el("div", { class: "hint" }, [`Tool: ${d.tool.tag} • Tier ${d.tool.tier}`]));
+      if (d.armor) card.appendChild(el("div", { class: "hint" }, [`Armor: Tier ${d.armor.tier} • Prot ${(d.armor.protection * 100).toFixed(0)}%`]));
 
-      const row = el("div", { class: "row" });
-
-      if (isEquippable) {
-        const btnEquip = el("button", {
-          class: "btn",
-          onclick: () => {
-            equipInstanceOnChar(char, inst.uid, loadedData);
-            safetySnapshot(state, loadedData);
-            toast("Equipped.");
-            renderAll(state, loadedData);
-            showPanel("Equipment", panelEquipment(state, loadedData, charId));
-          }
-        }, ["Equip"]);
-        row.appendChild(btnEquip);
-      }
-
-      const btnStore = el("button", {
-        class: "btn ghost",
+      const btn = el("button", {
+        class: "btn",
         onclick: () => {
-          const r = transferInstanceCharToRv(state, loadedData, charId, inst.uid);
-          if (!r.ok) return toast(`Can't store: ${r.reason}`);
-          toast("Moved to RV storage.");
-          renderAll(state, loadedData);
+          equipInstanceOnChar(char, it.inst.uid, loadedData);
+          safetySnapshot(state, loadedData);
+          toast(`${char.name} equipped ${d.name}.`);
           showPanel("Equipment", panelEquipment(state, loadedData, charId));
-        }
-      }, ["Store in RV"]);
-      row.appendChild(btnStore);
-
-      card.appendChild(row);
-      instList.appendChild(card);
-    }
-    instCard.appendChild(instList);
-    wrap.appendChild(instCard);
-
-    // Pocket Stacks (supplies)
-    const stackCard = el("div", { class: "card" });
-    stackCard.appendChild(el("div", { class: "cardTitle" }, ["Pockets — Supplies"]));
-
-    const stackList = el("div", { class: "panelStack" });
-    const stacks = char.pockets.stacks || [];
-    if (!stacks.length) stackList.appendChild(el("div", { class: "hint" }, ["No stacked items in pockets. Transfer from Storage."]));
-
-    for (const st of stacks) {
-      const def = loadedData.idx.itemsById.get(st.itemId);
-      const name = def?.name ?? st.itemId;
-
-      const card = el("div", { class: "card" });
-      card.appendChild(el("div", { class: "cardTitle" }, [`${name} × ${st.qty}`]));
-
-      const row = el("div", { class: "row" });
-      const btnStore = el("button", {
-        class: "btn ghost",
-        onclick: async () => {
-          const max = st.qty;
-          const v = await inputModal("Store Supplies", `How many ${name} to move to RV storage? (1-${max})`, "", "1");
-          const n = Math.max(0, Math.min(max, Math.floor(Number(v))));
-          if (!n) return;
-          const r = transferStackCharToRv(state, loadedData, charId, st.itemId, n);
-          if (!r.ok) return toast(`Can't store: ${r.reason}`);
-          toast("Moved to RV storage.");
           renderAll(state, loadedData);
-          showPanel("Equipment", panelEquipment(state, loadedData, charId));
         }
-      }, ["Store"]);
-      row.appendChild(btnStore);
-
-      card.appendChild(row);
-      stackList.appendChild(card);
+      }, ["Equip"]);
+      card.appendChild(btn);
+      wrap.appendChild(card);
     }
-
-    stackCard.appendChild(stackList);
-    wrap.appendChild(stackCard);
 
     return wrap;
   }
 
   function panelStorage(state, loadedData) {
+    const { idx } = loadedData;
     const wrap = el("div", { class: "panelStack" });
 
     const used = countStorageUsed(state, loadedData);
     const cap = state.rv.storage.capacity || 0;
-    wrap.appendChild(el("div", { class: "hint" }, [
-      `RV Storage: ${used}/${cap || "∞"} units. Use this panel to mark rations, transfer items to crew pockets, feed/drink manually, and drop items to free space.`
-    ]));
-
-    const crewOptions = state.crew.members.map(c => ({ id: c.id, label: c.name, hint: c.isPlayer ? "Player" : "Crew" }));
+    wrap.appendChild(el("div", { class: "smallLabel" }, [`Capacity: ${used}/${cap}`]));
+    wrap.appendChild(el("div", { class: "hint" }, ["Toggle which foods count as rations. NPCs will only auto-eat foods marked as rations."]));
 
     // Stacks
-    const stackCard = el("div", { class: "card" });
-    stackCard.appendChild(el("div", { class: "cardTitle" }, ["Stacks"]));
-    const stackList = el("div", { class: "panelStack" });
+    wrap.appendChild(el("div", { class: "cardTitle" }, ["Stacks"]));
+    if (state.rv.storage.stacks.length === 0) {
+      wrap.appendChild(el("div", { class: "hint" }, ["No stacked items."]));
+    } else {
+      for (const s of state.rv.storage.stacks) {
+        const def = idx.itemsById.get(s.itemId);
+        const row = el("div", { class: "card" });
+        row.appendChild(el("div", { class: "cardTitle" }, [`${def?.name ?? s.itemId} × ${s.qty}`]));
 
-    const stacks = state.rv.storage.stacks.slice().sort((a, b) => (a.itemId > b.itemId ? 1 : -1));
-    if (!stacks.length) stackList.appendChild(el("div", { class: "hint" }, ["No stacked items."]));
-
-    for (const s of stacks) {
-      const def = loadedData.idx.itemsById.get(s.itemId);
-      const name = def?.name ?? s.itemId;
-
-      const row = el("div", { class: "card" });
-      row.appendChild(el("div", { class: "cardTitle" }, [`${name} × ${s.qty}`]));
-
-      // Rations toggle (food only)
-      if (def?.category === "food") {
-        const rRow = el("div", { class: "row" });
-        const chk = el("input", { type: "checkbox" });
-        chk.checked = !!s.isRationAllowed;
-        chk.addEventListener("change", () => {
-          s.isRationAllowed = chk.checked;
-          state.rv.storage.rationPrefs = state.rv.storage.rationPrefs || {};
-          state.rv.storage.rationPrefs[s.itemId] = chk.checked;
-          safetySnapshot(state, loadedData);
-          toast("Rations updated.");
-        });
-        rRow.appendChild(chk);
-        rRow.appendChild(el("div", { class: "smallLabel" }, ["Rations"]));
-        row.appendChild(rRow);
-      }
-
-      const btnRow = el("div", { class: "row" });
-
-      // Feed / Drink directly from storage
-      if (def?.category === "food") {
-        const btnEat = el("button", {
-          class: "btn",
-          onclick: async () => {
-            const targetId = await chooseModal("Feed Crew", `Who will eat ${name}?`, crewOptions);
-            if (!targetId) return;
-            const char = state.crew.members.find(x => x.id === targetId);
-            if (!char) return;
-            const r = consumeFoodFromStorage(state, loadedData, char, s.itemId);
-            if (!r.ok) toast(`Can't eat: ${r.reason}`);
-            renderAll(state, loadedData);
-            showPanel("Storage", panelStorage(state, loadedData));
-          }
-        }, ["Feed"]);
-        btnRow.appendChild(btnEat);
-      }
-      if (def?.category === "water") {
-        const btnDrink = el("button", {
-          class: "btn",
-          onclick: async () => {
-            const targetId = await chooseModal("Give Water", `Who will drink ${name}?`, crewOptions);
-            if (!targetId) return;
-            const char = state.crew.members.find(x => x.id === targetId);
-            if (!char) return;
-            const r = consumeWaterFromStorage(state, loadedData, char, s.itemId);
-            if (!r.ok) toast(`Can't drink: ${r.reason}`);
-            renderAll(state, loadedData);
-            showPanel("Storage", panelStorage(state, loadedData));
-          }
-        }, ["Drink"]);
-        btnRow.appendChild(btnDrink);
-      }
-
-      // Transfer to pockets
-      const btnGive = el("button", {
-        class: "btn ghost",
-        onclick: async () => {
-          const targetId = await chooseModal("Transfer to Pockets", `Transfer ${name} to which crew member?`, crewOptions);
-          if (!targetId) return;
-
-          const max = s.qty;
-          const v = await inputModal("Transfer Amount", `How many ${name}? (1-${max})`, "", "1");
-          const n = Math.max(0, Math.min(max, Math.floor(Number(v))));
-          if (!n) return;
-
-          const r = transferStackRvToChar(state, loadedData, targetId, s.itemId, n);
-          if (!r.ok) toast(`Can't transfer: ${r.reason}`);
-          else toast("Transferred.");
-          renderAll(state, loadedData);
-          showPanel("Storage", panelStorage(state, loadedData));
+        if (def?.category === "food") {
+          const rationRow = el("div", { class: "row" });
+          const chk = el("input", { type: "checkbox" });
+          chk.checked = !!s.isRationAllowed;
+          chk.addEventListener("change", () => {
+            s.isRationAllowed = chk.checked;
+            safetySnapshot(state, loadedData);
+            toast(`Rations updated.`);
+          });
+          rationRow.appendChild(el("div", { class: "smallLabel" }, ["Rations: "]));
+          rationRow.appendChild(chk);
+          row.appendChild(rationRow);
         }
-      }, ["Transfer"]);
-      btnRow.appendChild(btnGive);
 
-      // Drop
-      const btnDrop = el("button", {
-        class: "btn ghost",
-        onclick: async () => {
-          const max = s.qty;
-          const v = await inputModal("Drop Items", `Drop how many ${name}? (1-${max})`, "", String(max));
-          const n = Math.max(0, Math.min(max, Math.floor(Number(v))));
-          if (!n) return;
-          const ok = await confirmModal("Confirm Drop", `Drop <b>${n}× ${name}</b>? This cannot be undone.`, "Drop", "Cancel");
-          if (!ok) return;
-          const r = dropFromRvStorage(state, loadedData, s.itemId, n);
-          if (!r.ok) toast(`Can't drop: ${r.reason}`);
-          renderAll(state, loadedData);
-          showPanel("Storage", panelStorage(state, loadedData));
-        }
-      }, ["Drop"]);
-      btnRow.appendChild(btnDrop);
-
-      row.appendChild(btnRow);
-      stackList.appendChild(row);
+        wrap.appendChild(row);
+      }
     }
 
-    stackCard.appendChild(stackList);
-    wrap.appendChild(stackCard);
+    // Instances (tools/armor)
+    wrap.appendChild(el("div", { class: "divider" }));
+    wrap.appendChild(el("div", { class: "cardTitle" }, ["Gear (Instances)"]));
 
-    // Instances
-    const instCard = el("div", { class: "card" });
-    instCard.appendChild(el("div", { class: "cardTitle" }, ["Instances / Gear"]));
-    const instList = el("div", { class: "panelStack" });
-
-    const insts = state.rv.storage.instances.slice();
-    if (!insts.length) instList.appendChild(el("div", { class: "hint" }, ["No instanced gear in storage."]));
-
-    for (const inst of insts) {
-      const def = loadedData.idx.itemsById.get(inst.itemId);
-      const name = def?.name ?? inst.itemId;
-      const durTxt = (inst.durability != null) ? `Durability: ${inst.durability}` : "";
-
-      const card = el("div", { class: "card" });
-      card.appendChild(el("div", { class: "cardTitle" }, [name]));
-      if (durTxt) card.appendChild(el("div", { class: "hint" }, [durTxt]));
-
-      const row = el("div", { class: "row" });
-
-      const btnGiveInst = el("button", {
-        class: "btn",
-        onclick: async () => {
-          const targetId = await chooseModal("Give Gear", `Give ${name} to which crew member?`, crewOptions);
-          if (!targetId) return;
-          const r = transferInstanceRvToChar(state, loadedData, targetId, inst.uid);
-          if (!r.ok) toast(`Can't give: ${r.reason}`);
-          else toast("Moved to pockets.");
-          renderAll(state, loadedData);
-          showPanel("Storage", panelStorage(state, loadedData));
-          // optional: jump to equipment for quick equip
-          if (r.ok) showPanel("Equipment", panelEquipment(state, loadedData, targetId));
-        }
-      }, ["Give"]);
-      row.appendChild(btnGiveInst);
-
-      const btnDropInst = el("button", {
-        class: "btn ghost",
-        onclick: async () => {
-          const ok = await confirmModal("Confirm Drop", `Drop <b>${name}</b>? This cannot be undone.`, "Drop", "Cancel");
-          if (!ok) return;
-          const r = dropInstanceFromRvStorage(state, loadedData, inst.uid);
-          if (!r.ok) toast(`Can't drop: ${r.reason}`);
-          renderAll(state, loadedData);
-          showPanel("Storage", panelStorage(state, loadedData));
-        }
-      }, ["Drop"]);
-      row.appendChild(btnDropInst);
-
-      card.appendChild(row);
-      instList.appendChild(card);
+    if (state.rv.storage.instances.length === 0) {
+      wrap.appendChild(el("div", { class: "hint" }, ["No gear items in RV storage. Crafted gear will appear here."]));
+    } else {
+      for (const inst of state.rv.storage.instances.slice(0, 60)) {
+        const def = idx.itemsById.get(inst.itemId);
+        const card = el("div", { class: "card" });
+        card.appendChild(el("div", { class: "cardTitle" }, [def?.name ?? inst.itemId]));
+        if (inst.durability != null) card.appendChild(el("div", { class: "hint" }, [`Durability: ${inst.durability}`]));
+        wrap.appendChild(card);
+      }
     }
-
-    instCard.appendChild(instList);
-    wrap.appendChild(instCard);
 
     return wrap;
   }
@@ -3323,11 +2452,11 @@
      Admin Panel
   ========================= */
   function isAdminUnlocked() {
-    return store.getItem(LS_ADMIN_UNLOCK_KEY) === "1";
+    return localStorage.getItem(LS_ADMIN_UNLOCK_KEY) === "1";
   }
 
   function setAdminUnlocked(v) {
-    store.setItem(LS_ADMIN_UNLOCK_KEY, v ? "1" : "0");
+    localStorage.setItem(LS_ADMIN_UNLOCK_KEY, v ? "1" : "0");
   }
 
   function toggleAdminOverlay(state, loadedData, ctx) {
@@ -3338,16 +2467,8 @@
     }
 
     UI.adminOverlay = el("div", { class: "adminOverlay" });
-    UI.adminOverlay.addEventListener("click", (e) => { if (e.target === UI.adminOverlay) toggleAdminOverlay(state, loadedData, ctx); });
     const panel = el("div", { class: "adminPanel" });
-    const titleRow = el("div", { class: "row" });
-    titleRow.appendChild(el("div", { class: "adminTitle" }, ["Admin Panel"]));
-    const btnClose = el("button", {
-      class: "btn ghost",
-      onclick: () => toggleAdminOverlay(state, loadedData, ctx)
-    }, ["Close"]);
-    titleRow.appendChild(btnClose);
-    panel.appendChild(titleRow);
+    panel.appendChild(el("div", { class: "adminTitle" }, ["Admin Panel (~)"]));
 
     const unlocked = isAdminUnlocked();
     const lockRow = el("div", { class: "row" });
@@ -3572,7 +2693,7 @@
     let state = null;
 
     const ctx = {
-      activeSaveId: store.getItem(LS_LAST_ACTIVE_SAVE_KEY) || null,
+      activeSaveId: localStorage.getItem(LS_LAST_ACTIVE_SAVE_KEY) || null,
 
       replaceState(newState) {
         state = newState;
@@ -3597,7 +2718,7 @@
         const s = getSaveSlot(id);
         if (!s) return toast("Save not found.");
         this.activeSaveId = id;
-        store.setItem(LS_LAST_ACTIVE_SAVE_KEY, id);
+        localStorage.setItem(LS_LAST_ACTIVE_SAVE_KEY, id);
         this.replaceState(deepCopy(s.state));
         toast(`Loaded: ${s.name}`);
       },
@@ -3654,7 +2775,6 @@
     UI.btnStorage.addEventListener("click", () => showPanel("Storage", panelStorage(state, loadedData)));
     UI.btnStations.addEventListener("click", () => showPanel("Stations", panelStations(state, loadedData)));
     UI.btnSaves.addEventListener("click", () => showPanel("Saves", panelSaves(state, loadedData, ctx)));
-    UI.btnAdmin.addEventListener("click", () => toggleAdminOverlay(state, loadedData, ctx));
 
     // Keyboard: ~ toggles admin overlay
     window.addEventListener("keydown", (e) => {
