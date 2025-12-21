@@ -21,7 +21,7 @@
   "use strict";
 
   // Build marker (helps confirm which file the browser is actually running)
-  window.RVROVER_BUILD = "v0.3.0";
+  window.RVROVER_BUILD = "v0.2.9";
   console.log("[RV ROVER] Loaded", window.RVROVER_BUILD);
 
   /* =========================
@@ -1800,8 +1800,6 @@
     if (!state.meta.lastTileId) state.meta.lastTileId = tileId;
     const tile = getOrCreateTile(state, loadedData, tileId);
 
-    // Track items gained during this job (used for logging + morale)
-    const got = [];
     // Deterministic-ish RNG seed: use sim time if available, otherwise fall back to real time.
     const __seedTime = Math.floor(((state.meta.lastSimAt || gameNow(state)) || nowReal()) / 1000);
     const rng = mulberry32(hashStringToUint(`${state.rngSeed}|${__seedTime}|${jEntry.id}`));
@@ -1901,7 +1899,7 @@
       const yieldMult = clamp(1 + (toolTier * 0.15) + (skill * 0.02), 0.5, 3.5);
 
       const yields = job.yields || [];
-      // got[] is declared above so it can be used for all job types
+      const got = [];
 
       for (const y of yields) {
         if ((y.chance ?? 1) < 1 && rng() > y.chance) continue;
@@ -1966,7 +1964,7 @@
     }
 
     // Log completion summary
-    const gainedText = got.length ? got.map(g => `${g.qty}× ${idx.itemsById.get(g.id)?.name ?? g.id}`).join(", ") : "nothing";
+    const gainedText = gained.length ? gained.map(g => `${g.qty}× ${idx.itemsById.get(g.id)?.name ?? g.id}`).join(", ") : "nothing";
     pushLog(state, `${char.name} finished ${job.name}: got ${gainedText}.`, "good", char.id, loadedData);
 
     // Tutorial completion check
@@ -2101,7 +2099,7 @@
       else pushLog(state, `Storage full. Couldn't store crafted item: ${idx.itemsById.get(out.id)?.name ?? out.id}.`, "bad", null, loadedData);
     }
 
-    const txt = got.length ? gained.map(g => `${g.qty}× ${idx.itemsById.get(g.id)?.name ?? g.id}`).join(", ") : "nothing";
+    const txt = gained.length ? gained.map(g => `${g.qty}× ${idx.itemsById.get(g.id)?.name ?? g.id}`).join(", ") : "nothing";
     pushLog(state, `Craft complete: ${recipe.name} -> ${txt}.`, "good", null, loadedData);
   }
 
