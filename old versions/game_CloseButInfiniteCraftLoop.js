@@ -21,7 +21,7 @@
   "use strict";
 
   // Build marker (helps confirm which file the browser is actually running)
-  window.RVROVER_BUILD = "v0.3.1";
+  window.RVROVER_BUILD = "v0.3.0";
   console.log("[RV ROVER] Loaded", window.RVROVER_BUILD);
 
   /* =========================
@@ -1682,8 +1682,7 @@
       toolOk,
       tileId: (opts.tileId != null ? opts.tileId : state.meta.lastTileId),
       meta: opts.meta || null,
-      completed: false,
-      inputs: (recipe.inputs || []).map(i => ({ id: i.id, qty: i.qty }))
+      completed: false
     };
 
     state.queues.jobsByCharId[charId] = state.queues.jobsByCharId[charId] || [];
@@ -2054,37 +2053,6 @@ pushLog(state, `${char.name} finished ${job.name}.`, "good", char.id, loadedData
     return { ok: true };
   }
 
-  function cancelCraftEntry(state, loadedData, stationId, entryId) {
-    const { idx } = loadedData;
-    const q = state.queues.craftsByStationId?.[stationId];
-    if (!q || q.length === 0) return { ok: false, reason: "empty" };
-
-    const i = q.findIndex(e => e.id === entryId);
-    if (i < 0) return { ok: false, reason: "not found" };
-
-    const entry = q[i];
-    const recipe = idx.recipesById.get(entry.recipeId);
-
-    // Refund inputs (best-effort). Inputs were removed at craft start.
-    const inputs = entry.inputs || recipe?.inputs || [];
-    for (const inp of inputs) {
-      const ok = addItemToStorage(state, loadedData, inp.id, inp.qty);
-      if (!ok?.ok) {
-        pushLog(state, `Storage full. Couldn't refund ${inp.qty}× ${idx.itemsById.get(inp.id)?.name ?? inp.id}.`, "bad", null, loadedData);
-      }
-    }
-
-    q.splice(i, 1);
-
-    // If we canceled the active craft, start the next one immediately.
-    if (i === 0 && q[0]) q[0].startAt = gameNow(state);
-
-    pushLog(state, `Canceled craft: ${recipe?.name ?? entry.recipeId}.`, "info", null, loadedData);
-    safetySnapshot(state, loadedData);
-    return { ok: true };
-  }
-
-
   function tickCraftQueues(state, loadedData) {
     const { idx } = loadedData;
     const t = gameNow(state);
@@ -2100,12 +2068,7 @@ pushLog(state, `${char.name} finished ${job.name}.`, "good", char.id, loadedData
         if (endsAt > t) break;
 
         const recipe = idx.recipesById.get(cEntry.recipeId);
-        try {
-          resolveCraftCompletion(state, loadedData, recipe);
-        } catch (e) {
-          console.error(e);
-          pushLog(state, `Craft error while completing ${recipe?.name ?? cEntry.recipeId} (see console).`, "bad", null, loadedData);
-        }
+        resolveCraftCompletion(state, loadedData, recipe);
 
         q.shift();
         if (q.length > 0) q[0].startAt = endsAt;
@@ -2118,36 +2081,27 @@ pushLog(state, `${char.name} finished ${job.name}.`, "good", char.id, loadedData
   function resolveCraftCompletion(state, loadedData, recipe) {
     const { idx } = loadedData;
 
-    try {
-      if (!recipe) {
-        pushLog(state, "Craft failed: missing recipe data.", "bad", null, loadedData);
-        return;
+    if (recipe.special?.makeItem) {
+      // Special: create/ensure special item exists and add it
+      const it = recipe.special.makeItem;
+      if (!idx.itemsById.has(it.id)) {
+        // (Should already be normalized on load)
       }
-
-      if (recipe.special?.makeItem) {
-        const it = recipe.special.makeItem;
-        const qty = recipe.special.qty || 1;
-        const ok = addItemToStorage(state, loadedData, it.id, qty);
-        if (!ok?.ok) {
-          pushLog(state, `Storage full. Couldn't store crafted ${idx.itemsById.get(it.id)?.name ?? it.id}.`, "bad", null, loadedData);
-        }
-        pushLog(state, `Craft complete: ${recipe.name}.`, "good", null, loadedData);
-        return;
-      }
-
-      for (const out of (recipe.outputs || [])) {
-        if (!out || !out.id || !out.qty) continue;
-        const ok = addItemToStorage(state, loadedData, out.id, out.qty);
-        if (!ok?.ok) {
-          pushLog(state, `Storage full. Couldn't store crafted ${idx.itemsById.get(out.id)?.name ?? out.id}.`, "bad", null, loadedData);
-        }
-      }
-
-      pushLog(state, `Craft complete: ${recipe.name}.`, "good", null, loadedData);
-    } catch (e) {
-      console.error(e);
-      pushLog(state, `Craft error while completing ${recipe?.name ?? "a recipe"} (see console).`, "bad", null, loadedData);
+      addItemToStorage(state, loadedData, it.id, recipe.special.qty || 1);
+      pushLog(state, `Crafted: ${it.name}.`, "good", null, loadedData);
+      return;
     }
+
+    const gained = [];
+    for (const out of (recipe.outputs || [])) {
+      if (!out.qty || out.qty <= 0) continue;
+      const ok = addItemToStorage(state, loadedData, out.id, out.qty);
+      if (ok.ok) gained.push({ id: out.id, qty: out.qty });
+      else pushLog(state, `Storage full. Couldn't store crafted item: ${idx.itemsById.get(out.id)?.name ?? out.id}.`, "bad", null, loadedData);
+    }
+
+    const txt = got.length ? gained.map(g => `${g.qty}× ${idx.itemsById.get(g.id)?.name ?? g.id}`).join(", ") : "nothing";
+    pushLog(state, `Craft complete: ${recipe.name} -> ${txt}.`, "good", null, loadedData);
   }
 
   /* =========================
@@ -2876,37 +2830,21 @@ pushLog(state, `${char.name} finished ${job.name}.`, "good", char.id, loadedData
       const stName = loadedData.idx.stationsById.get(stationId)?.name ?? stationId;
       const box = el("div", { class: "card" });
       box.appendChild(el("div", { class: "smallLabel" }, [stName]));
-
-      const body = el("div", { class: "cardBody" });
+      const body = el("div", { class: "hint" });
 
       if (!q || q.length === 0) {
-        body.appendChild(el("div", { class: "hint" }, ["Empty."]));
+        body.textContent = "Empty.";
       } else {
         const t = gameNow(state);
-
-        for (let i = 0; i < q.length; i++) {
-          const c = q[i];
+        const lines = q.map((c, i) => {
           const rec = loadedData.idx.recipesById.get(c.recipeId);
           const ends = (c.startAt || t) + c.durationMs;
           const left = Math.max(0, ends - t);
-          const label = `${i === 0 ? "▶" : "•"} ${rec?.name ?? c.recipeId} — ${fmtTime(left)} remaining`;
-
-          const row = el("div", { class: "row" });
-          row.appendChild(el("div", { class: "hint", style: "flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" }, [label]));
-
-          row.appendChild(el("button", {
-            class: "btn",
-            onclick: () => {
-              const res = cancelCraftEntry(state, loadedData, stationId, c.id);
-              if (!res.ok) toast("Nothing to cancel.");
-              renderAll(state, loadedData);
-            }
-          }, [i === 0 ? "Cancel" : "Remove"]));
-
-          body.appendChild(row);
-        }
+          return `${i === 0 ? "▶" : "•"} ${rec?.name ?? c.recipeId} — ${fmtTime(left)} remaining`;
+        });
+        body.textContent = lines.join("\n");
+        body.style.whiteSpace = "pre-line";
       }
-
       box.appendChild(body);
       wrap.appendChild(box);
     }
