@@ -629,7 +629,6 @@
     __injectJob({
       id: "gather_water",
       name: "Gather Water",
-      alwaysAvailable: true,
       baseMinutes: 1,
       desc: "Fill a container with water (you choose the container).",
       safe: true,
@@ -641,7 +640,6 @@
     __injectJob({
       id: "explore",
       name: "Explore Nearby Tile",
-      alwaysAvailable: true,
       baseMinutes: 25,
       desc: "Send a crew member to scout a nearby tile and return with loot (requires rations in pockets).",
       safe: false,
@@ -1600,26 +1598,11 @@
   function listAvailableJobsForTile(state, loadedData, tile) {
     const { data } = loadedData;
     const biome = biomeForTile(loadedData, tile);
-    const biomeId = biome?.id;
 
     const jobs = [];
-    for (const j of (data.jobs || [])) {
-      // Back-compat: older job schemas may use "biomes" (biome IDs) instead of "biomeTags".
-      const hasGate =
-        !!j.alwaysAvailable ||
-        (Array.isArray(j.biomeTags) && j.biomeTags.length) ||
-        (Array.isArray(j.biomes) && j.biomes.length) ||
-        (Array.isArray(j.biomeIds) && j.biomeIds.length);
-
-      const ok =
-        !!j.alwaysAvailable ||
-        (Array.isArray(j.biomeTags) && j.biomeTags.some(t => (biome.tags || []).includes(t))) ||
-        (Array.isArray(j.biomes) && biomeId && j.biomes.includes(biomeId)) ||
-        (Array.isArray(j.biomeIds) && biomeId && j.biomeIds.includes(biomeId)) ||
-        // If job has no gating fields at all, treat it as available (v0.1 behavior).
-        !hasGate;
-
-      if (ok) jobs.push(j);
+    for (const j of data.jobs) {
+      if (j.alwaysAvailable) jobs.push(j);
+      else if (j.biomeTags && j.biomeTags.some(t => (biome.tags || []).includes(t))) jobs.push(j);
     }
     return jobs;
   }
@@ -2587,39 +2570,7 @@
             if (!pocketFood || !pocketWater) return toast("Exploration requires 1 food + 1 water in pockets. Transfer supplies to pockets first.");
 
             // Choose exploration action (reuses yields from an existing job if available)
-            const pickJobId = (key) => {
-              // Prefer direct ID match.
-              if (loadedData.idx.jobsById.has(key)) return key;
-
-              const lowerKey = String(key).toLowerCase();
-
-              // Heuristics: look for matching job by explicit fields, skill, or name.
-              let best = null;
-              for (const j of (loadedData.data.jobs || [])) {
-                const jid = j.id;
-                if (!jid) continue;
-
-                const name = String(j.name || "").toLowerCase();
-                const xpSkill = String(j.xpSkill || "").toLowerCase();
-                const tags = Array.isArray(j.tags) ? j.tags.map(t => String(t).toLowerCase()) : [];
-
-                // direct-ish matches
-                if (String(j.action || "").toLowerCase() === lowerKey) return jid;
-                if (String(j.actionKey || "").toLowerCase() === lowerKey) return jid;
-                if (tags.includes(lowerKey)) return jid;
-
-                // skill-based + name-based fallbacks
-                if (lowerKey === "scavenge" && (xpSkill === "scavenge" || name.includes("scavenge"))) best ||= jid;
-                if (lowerKey === "forage" && (name.includes("forage") || xpSkill === "wilderness")) best ||= jid;
-                if (lowerKey === "hunt" && (name.includes("hunt") || name.includes("hunting"))) best ||= jid;
-                if (lowerKey === "fish" && (name.includes("fish") || name.includes("fishing"))) best ||= jid;
-              }
-              return best;
-            };
-
-            const desired = ["forage", "scavenge", "hunt", "fish"];
-            const actionCandidates = desired.map(pickJobId).filter(Boolean);
-
+            const actionCandidates = ["forage", "scavenge", "hunt", "fish"].filter(id => loadedData.idx.jobsById.has(id));
             const actOptions = (actionCandidates.length ? actionCandidates : ["forage"]).map(id => ({
               id,
               label: loadedData.idx.jobsById.get(id)?.name ?? id,
