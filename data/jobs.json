@@ -65,6 +65,27 @@
     ],
     "risk": { "minorInjury": 0.09, "majorInjury": 0.02, "toolWear": 0.2, "sickness": 0.03 },
     "xpSkill": "Scavenge"
+  },
+  {
+    "id": "gather_water",
+    "name": "Gather Water",
+    "alwaysAvailable": true,
+    "baseSec": 60,
+    "strenuous": false,
+    "toolTag": null,
+    "yields": [],
+    "risk": { "minorInjury": 0.0, "majorInjury": 0.0, "toolWear": 0.0, "sickness": 0.0 },
+    "xpSkill": "Wilderness"
+  },
+  {
+    "id": "explore",
+    "name": "Explore Nearby Tile",
+    "alwaysAvailable": true,
+    "baseSec": 1500,
+    "strenuous": true,
+    "toolTag": null,
+    "yields": [],
+    "risk": { "minorInjury": 0.02, "majorInjury": 0.01, "toolWear": 0.0, "sickness": 0.02 },
+    "xpSkill": "Wilderness"
   }
 ]
-
