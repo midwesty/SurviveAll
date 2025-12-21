@@ -1771,19 +1771,6 @@
   function resolveJobCompletion(state, loadedData, char, job, jEntry) {
     const { idx, data } = loadedData;
 
-    const charId = char.id;
-
-    // Ensure we have a valid current tile for biome/yields and seeded RNG.
-    // (The game remains playable even if the player never granted location permission.)
-    const prec = data.config.tilePrecision || 7;
-    const tileId = state.meta.lastTileId || geohashEncode(0, 0, prec);
-    if (!state.meta.lastTileId) state.meta.lastTileId = tileId;
-    const tile = getOrCreateTile(state, loadedData, tileId);
-
-    // Deterministic-ish RNG seed: use sim time if available, otherwise fall back to real time.
-    const __seedTime = Math.floor(((state.meta.lastSimAt || gameNow(state)) || nowReal()) / 1000);
-    const rng = mulberry32(hashStringToUint(`${state.rngSeed}|${__seedTime}|${jEntry.id}`));
-
     // Needs drain boost for strenuous jobs
     const strain = job.strenuous ? data.config.jobStrenuousDrainMultiplier : 1.0;
 
@@ -1838,13 +1825,15 @@
       const actionJobId = jEntry.meta.actionJobId;
       const actionJob = actionJobId ? loadedData.idx.jobsById.get(actionJobId) : null;
 
+      const __seedTime = Math.floor(((state.meta.lastSimAt || gameNow(state)) || nowReal()) / 1000);
+      const rng = mulberry32(hashStringToUint(`${state.rngSeed}|${__seedTime}|${jEntry.id}`));
       const toolTier = getToolTierForJob(state, loadedData, char, actionJob || job);
       const wild = effectiveSkill(char, "Wilderness");
       const wits = effectiveSkill(char, "Wits");
       const grit = effectiveSkill(char, "Grit");
 
       const successChance = clamp(0.55 + (wild * 0.02) + (wits * 0.01) + (toolTier * 0.04), 0.25, 0.95);
-      const success = (rng() < successChance);
+      const success = (Math.random() < successChance);
 
       if (success && actionJob?.yields?.length) {
         const biome = loadedData.idx.biomesById.get(tile.biomeId);
@@ -1867,8 +1856,10 @@
 
       // extra injury chance when exploring
       const extra = clamp(0.10 - (grit * 0.01), 0.02, 0.12);
-      if (rng() < extra) applyInjury(state, loadedData, char, "minor");
+      if (Math.random() < extra) applyInjury(state, loadedData, char, "minor");
     } else {
+      const __seedTime = Math.floor(((state.meta.lastSimAt || gameNow(state)) || nowReal()) / 1000);
+      const rng = mulberry32(hashStringToUint(`${state.rngSeed}|${__seedTime}|${jEntry.id}`));
       const biome = loadedData.idx.biomesById.get(tile.biomeId);
 
       // Determine tool tier from equipment (if job wants it)
@@ -1939,7 +1930,7 @@
     // Death/downed check (MVP): if health is too low due to compounded penalties
     // We don't track detailed combat; downed can occur if major injury + starving + unlucky.
     const dangerScore = (char.needs.hunger < 10 ? 1 : 0) + (char.needs.thirst < 10 ? 1 : 0) + (char.conditions.injury?.severity === "major" ? 2 : 0) + (char.conditions.sickness ? 1 : 0);
-    if (!char.conditions.downed && dangerScore >= 4 && rng() < 0.15) {
+    if (!char.conditions.downed && dangerScore >= 4 && Math.random() < 0.15) {
       downCharacter(state, loadedData, char);
     }
 
