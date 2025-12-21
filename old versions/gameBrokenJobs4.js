@@ -21,7 +21,7 @@
   "use strict";
 
   // Build marker (helps confirm which file the browser is actually running)
-  window.RVROVER_BUILD = "v0.2.8";
+  window.RVROVER_BUILD = "v0.2.7";
   console.log("[RV ROVER] Loaded", window.RVROVER_BUILD);
 
   /* =========================
@@ -1943,7 +1943,7 @@
     }
 
     // Morale adjustments from outcomes
-    if (got.length > 0) char.needs.morale = clamp(char.needs.morale + 1, 0, 100);
+    if (gained.length > 0) char.needs.morale = clamp(char.needs.morale + 1, 0, 100);
 
     // Death/downed check (MVP): if health is too low due to compounded penalties
     // We don't track detailed combat; downed can occur if major injury + starving + unlucky.
