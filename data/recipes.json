@@ -152,13 +152,13 @@
     "station": "roof_garden",
     "timeSec": 86400,
     "inputs": [
-      { "id": "seed_corn", "qty": 1 },
+      { "id": "corn_seed", "qty": 1 },
       { "id": "dirt", "qty": 1 },
       { "id": "water_clean", "qty": 1 }
     ],
     "outputs": [
       { "id": "corn", "qty": 3 },
-      { "id": "seed_corn", "qty": 1 }
+      { "id": "corn_seed", "qty": 1 }
     ]
   },
   {
@@ -167,13 +167,13 @@
     "station": "roof_garden",
     "timeSec": 86400,
     "inputs": [
-      { "id": "seed_berry", "qty": 1 },
+      { "id": "berry_seed", "qty": 1 },
       { "id": "dirt", "qty": 1 },
       { "id": "water_clean", "qty": 1 }
     ],
     "outputs": [
       { "id": "berry", "qty": 3 },
-      { "id": "seed_berry", "qty": 1 }
+      { "id": "berry_seed", "qty": 1 }
     ]
   },
   {
@@ -182,13 +182,13 @@
     "station": "roof_garden",
     "timeSec": 86400,
     "inputs": [
-      { "id": "seed_wheat", "qty": 1 },
+      { "id": "wheat_seed", "qty": 1 },
       { "id": "dirt", "qty": 1 },
       { "id": "water_clean", "qty": 1 }
     ],
     "outputs": [
       { "id": "wheat", "qty": 3 },
-      { "id": "seed_wheat", "qty": 1 }
+      { "id": "wheat_seed", "qty": 1 }
     ]
   },
   {
@@ -197,13 +197,13 @@
     "station": "roof_garden",
     "timeSec": 86400,
     "inputs": [
-      { "id": "seed_vegetable", "qty": 1 },
+      { "id": "vegetable_seed", "qty": 1 },
       { "id": "dirt", "qty": 1 },
       { "id": "water_clean", "qty": 1 }
     ],
     "outputs": [
       { "id": "vegetable", "qty": 3 },
-      { "id": "seed_vegetable", "qty": 1 }
+      { "id": "vegetable_seed", "qty": 1 }
     ]
   },
 
