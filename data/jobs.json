@@ -294,10 +294,10 @@
   "strenuous": false,
   "toolTag": null,
   "yields": [
-    { "id": "seed_corn", "min": 0, "max": 1, "chance": 0.30 },
-    { "id": "seed_berry", "min": 0, "max": 1, "chance": 0.30 },
-    { "id": "seed_wheat", "min": 0, "max": 1, "chance": 0.25 },
-    { "id": "seed_veg", "min": 0, "max": 1, "chance": 0.25 }
+    { "id": "corn_seed", "min": 0, "max": 1, "chance": 0.30 },
+    { "id": "berry_seed", "min": 0, "max": 1, "chance": 0.30 },
+    { "id": "wheat_seed", "min": 0, "max": 1, "chance": 0.25 },
+    { "id": "vegetable_seed", "min": 0, "max": 1, "chance": 0.25 }
   ],
   "risk": { "minorInjury": 0.02, "majorInjury": 0.002, "toolWear": 0.0, "sickness": 0.0 },
   "xpSkill": "Wilderness"
