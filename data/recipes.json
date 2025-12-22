@@ -1,5 +1,705 @@
 [
   {
+    "id": "plank_wood",
+    "name": "Make Wood Plank",
+    "station": "workbench",
+    "timeSec": 60,
+    "inputs": [
+      { "id": "stick", "qty": 4 }
+    ],
+    "outputs": [
+      { "id": "wood_plank", "qty": 1 }
+    ],
+    "special": {
+      "makeItem": {
+        "id": "wood_plank",
+        "name": "Wood Plank",
+        "category": "material",
+        "stackSize": 99,
+        "desc": "Flat boards useful for building."
+      },
+      "qty": 1
+    }
+  },
+  {
+    "id": "nails",
+    "name": "Make Nails",
+    "station": "workbench",
+    "timeSec": 60,
+    "inputs": [
+      { "id": "raw_metal", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "nails", "qty": 4 }
+    ],
+    "special": {
+      "makeItem": {
+        "id": "nails",
+        "name": "Nails",
+        "category": "material",
+        "stackSize": 999,
+        "desc": "Fasteners for construction."
+      },
+      "qty": 4
+    }
+  },
+  {
+    "id": "pickaxe_metal",
+    "name": "Craft Metal Pickaxe",
+    "station": "workbench",
+    "timeSec": 180,
+    "inputs": [
+      { "id": "stick", "qty": 2 },
+      { "id": "cordage_item", "qty": 1 },
+      { "id": "raw_metal", "qty": 2 }
+    ],
+    "outputs": [
+      { "id": "pickaxe_metal", "qty": 1 }
+    ],
+    "special": {
+      "makeItem": {
+        "id": "pickaxe_metal",
+        "name": "Metal Pickaxe",
+        "category": "tool",
+        "stackSize": 1,
+        "tool": { "tag": "pickaxe", "tier": 1 },
+        "desc": "Required for mining metal."
+      },
+      "qty": 1
+    }
+  },
+  {
+    "id": "glue",
+    "name": "Make Glue",
+    "station": "workbench",
+    "timeSec": 180,
+    "inputs": [
+      { "id": "meat_raw", "qty": 1 },
+      { "id": "fiber", "qty": 2 },
+      { "id": "water_clean", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "glue", "qty": 1 }
+    ],
+    "special": {
+      "makeItem": {
+        "id": "glue",
+        "name": "Glue",
+        "category": "material",
+        "stackSize": 99,
+        "desc": "Sticky binder for crafting and repairs."
+      },
+      "qty": 1
+    }
+  },
+  {
+    "id": "antidote",
+    "name": "Craft Antidote",
+    "station": "workbench",
+    "timeSec": 180,
+    "inputs": [
+      { "id": "water_clean", "qty": 1 },
+      { "id": "fiber", "qty": 2 },
+      { "id": "scrap_metal", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "antidote", "qty": 1 }
+    ]
+  },
+  {
+    "id": "revive_serum",
+    "name": "Craft Revive Serum",
+    "station": "workbench",
+    "timeSec": 300,
+    "inputs": [
+      { "id": "water_clean", "qty": 2 },
+      { "id": "fiber", "qty": 4 },
+      { "id": "scrap_metal", "qty": 2 }
+    ],
+    "outputs": [
+      { "id": "revive_serum", "qty": 1 }
+    ]
+  },
+  {
+    "id": "clothes_basic",
+    "name": "Craft Basic Clothes",
+    "station": "workbench",
+    "timeSec": 240,
+    "inputs": [
+      { "id": "fiber", "qty": 8 }
+    ],
+    "outputs": [
+      { "id": "clothes_basic", "qty": 1 }
+    ]
+  },
+  {
+    "id": "boots_scrap",
+    "name": "Craft Scrap Boots",
+    "station": "workbench",
+    "timeSec": 240,
+    "inputs": [
+      { "id": "fiber", "qty": 3 },
+      { "id": "scrap_metal", "qty": 2 }
+    ],
+    "outputs": [
+      { "id": "boots_scrap", "qty": 1 }
+    ]
+  },
+
+  {
+    "id": "grow_corn",
+    "name": "Grow Corn",
+    "station": "roof_garden",
+    "timeSec": 86400,
+    "inputs": [
+      { "id": "seed_corn", "qty": 1 },
+      { "id": "dirt", "qty": 1 },
+      { "id": "water_clean", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "corn", "qty": 3 },
+      { "id": "seed_corn", "qty": 1 }
+    ]
+  },
+  {
+    "id": "grow_berry",
+    "name": "Grow Berries",
+    "station": "roof_garden",
+    "timeSec": 86400,
+    "inputs": [
+      { "id": "seed_berry", "qty": 1 },
+      { "id": "dirt", "qty": 1 },
+      { "id": "water_clean", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "berry", "qty": 3 },
+      { "id": "seed_berry", "qty": 1 }
+    ]
+  },
+  {
+    "id": "grow_wheat",
+    "name": "Grow Wheat",
+    "station": "roof_garden",
+    "timeSec": 86400,
+    "inputs": [
+      { "id": "seed_wheat", "qty": 1 },
+      { "id": "dirt", "qty": 1 },
+      { "id": "water_clean", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "wheat", "qty": 3 },
+      { "id": "seed_wheat", "qty": 1 }
+    ]
+  },
+  {
+    "id": "grow_vegetable",
+    "name": "Grow Vegetables",
+    "station": "roof_garden",
+    "timeSec": 86400,
+    "inputs": [
+      { "id": "seed_vegetable", "qty": 1 },
+      { "id": "dirt", "qty": 1 },
+      { "id": "water_clean", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "vegetable", "qty": 3 },
+      { "id": "seed_vegetable", "qty": 1 }
+    ]
+  },
+
+  {
+    "id": "fishlings",
+    "name": "Breed Fishlings",
+    "station": "husbandry_tank",
+    "timeSec": 43200,
+    "inputs": [
+      { "id": "live_fish", "qty": 2 },
+      { "id": "water_clean", "qty": 5 }
+    ],
+    "outputs": [
+      { "id": "fishlings", "qty": 10 }
+    ],
+    "special": {
+      "makeItem": {
+        "id": "fishlings",
+        "name": "Fishlings",
+        "category": "food",
+        "stackSize": 99,
+        "food": { "hunger": 6, "morale": 0, "quality": "low" },
+        "desc": "Tiny fish. Better cooked."
+      },
+      "qty": 10
+    }
+  },
+
+  {
+    "id": "popcorn",
+    "name": "Popcorn",
+    "station": "stove",
+    "timeSec": 60,
+    "inputs": [
+      { "id": "corn", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "popcorn", "qty": 1 }
+    ],
+    "special": {
+      "makeItem": {
+        "id": "popcorn",
+        "name": "Popcorn",
+        "category": "food",
+        "stackSize": 99,
+        "food": { "hunger": 10, "morale": 1, "quality": "mid" }
+      },
+      "qty": 1
+    }
+  },
+  {
+    "id": "wheat_bread",
+    "name": "Wheat Bread",
+    "station": "stove",
+    "timeSec": 300,
+    "inputs": [
+      { "id": "wheat", "qty": 4 },
+      { "id": "water_clean", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "wheat_bread", "qty": 5 }
+    ],
+    "special": {
+      "makeItem": {
+        "id": "wheat_bread",
+        "name": "Wheat Bread",
+        "category": "food",
+        "stackSize": 99,
+        "food": { "hunger": 18, "morale": 1, "quality": "mid" }
+      },
+      "qty": 5
+    }
+  },
+  {
+    "id": "cornbread",
+    "name": "Corn Bread",
+    "station": "stove",
+    "timeSec": 360,
+    "inputs": [
+      { "id": "corn", "qty": 2 },
+      { "id": "wheat", "qty": 2 },
+      { "id": "water_clean", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "cornbread", "qty": 5 }
+    ],
+    "special": {
+      "makeItem": {
+        "id": "cornbread",
+        "name": "Corn Bread",
+        "category": "food",
+        "stackSize": 99,
+        "food": { "hunger": 20, "morale": 1, "quality": "mid" }
+      },
+      "qty": 5
+    }
+  },
+  {
+    "id": "veggie_bread",
+    "name": "Veggie Bread",
+    "station": "stove",
+    "timeSec": 360,
+    "inputs": [
+      { "id": "vegetable", "qty": 2 },
+      { "id": "wheat", "qty": 2 },
+      { "id": "water_clean", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "veggie_bread", "qty": 5 }
+    ],
+    "special": {
+      "makeItem": {
+        "id": "veggie_bread",
+        "name": "Veggie Bread",
+        "category": "food",
+        "stackSize": 99,
+        "food": { "hunger": 22, "morale": 2, "quality": "mid" }
+      },
+      "qty": 5
+    }
+  },
+  {
+    "id": "berry_jam",
+    "name": "Berry Jam",
+    "station": "stove",
+    "timeSec": 240,
+    "inputs": [
+      { "id": "berry", "qty": 2 },
+      { "id": "water_clean", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "berry_jam", "qty": 3 }
+    ],
+    "special": {
+      "makeItem": {
+        "id": "berry_jam",
+        "name": "Berry Jam",
+        "category": "food",
+        "stackSize": 99,
+        "food": { "hunger": 8, "morale": 2, "quality": "high" }
+      },
+      "qty": 3
+    }
+  },
+  {
+    "id": "corn_whiskey",
+    "name": "Corn Whiskey",
+    "station": "stove",
+    "timeSec": 600,
+    "inputs": [
+      { "id": "corn", "qty": 2 },
+      { "id": "water_clean", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "corn_whiskey", "qty": 3 }
+    ],
+    "special": {
+      "makeItem": {
+        "id": "corn_whiskey",
+        "name": "Corn Whiskey",
+        "category": "water",
+        "stackSize": 99,
+        "water": { "thirst": 10, "morale": 2, "quality": "low" },
+        "desc": "Strong. Warms you up, but don't overdo it."
+      },
+      "qty": 3
+    }
+  },
+  {
+    "id": "salad",
+    "name": "Salad",
+    "station": "stove",
+    "timeSec": 45,
+    "inputs": [
+      { "id": "vegetable", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "salad", "qty": 1 }
+    ],
+    "special": {
+      "makeItem": {
+        "id": "salad",
+        "name": "Salad",
+        "category": "food",
+        "stackSize": 99,
+        "food": { "hunger": 12, "morale": 1, "quality": "high" }
+      },
+      "qty": 1
+    }
+  },
+  {
+    "id": "meat_sandwich",
+    "name": "Meat Sandwich",
+    "station": "stove",
+    "timeSec": 90,
+    "inputs": [
+      { "id": "wheat_bread", "qty": 1 },
+      { "id": "ration_basic", "qty": 1 },
+      { "id": "vegetable", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "meat_sandwich", "qty": 3 }
+    ],
+    "special": {
+      "makeItem": {
+        "id": "meat_sandwich",
+        "name": "Meat Sandwich",
+        "category": "food",
+        "stackSize": 99,
+        "food": { "hunger": 30, "morale": 3, "quality": "high" }
+      },
+      "qty": 3
+    }
+  },
+  {
+    "id": "fishlings_cooked",
+    "name": "Cooked Fishlings",
+    "station": "stove",
+    "timeSec": 90,
+    "inputs": [
+      { "id": "fishlings", "qty": 2 }
+    ],
+    "outputs": [
+      { "id": "fishlings_cooked", "qty": 2 }
+    ],
+    "special": {
+      "makeItem": {
+        "id": "fishlings_cooked",
+        "name": "Cooked Fishlings",
+        "category": "food",
+        "stackSize": 99,
+        "food": { "hunger": 16, "morale": 1, "quality": "mid" }
+      },
+      "qty": 2
+    }
+  },
+
+  {
+    "id": "popcorn_grill",
+    "name": "Popcorn (Grill)",
+    "station": "grill",
+    "timeSec": 45,
+    "inputs": [
+      { "id": "corn", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "popcorn", "qty": 1 }
+    ],
+    "special": {
+      "makeItem": {
+        "id": "popcorn",
+        "name": "Popcorn",
+        "category": "food",
+        "stackSize": 99,
+        "food": { "hunger": 10, "morale": 1, "quality": "mid" }
+      },
+      "qty": 1
+    }
+  },
+  {
+    "id": "wheat_bread_grill",
+    "name": "Wheat Bread (Grill)",
+    "station": "grill",
+    "timeSec": 225,
+    "inputs": [
+      { "id": "wheat", "qty": 4 },
+      { "id": "water_clean", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "wheat_bread", "qty": 5 }
+    ],
+    "special": {
+      "makeItem": {
+        "id": "wheat_bread",
+        "name": "Wheat Bread",
+        "category": "food",
+        "stackSize": 99,
+        "food": { "hunger": 18, "morale": 1, "quality": "mid" }
+      },
+      "qty": 5
+    }
+  },
+  {
+    "id": "cornbread_grill",
+    "name": "Corn Bread (Grill)",
+    "station": "grill",
+    "timeSec": 270,
+    "inputs": [
+      { "id": "corn", "qty": 2 },
+      { "id": "wheat", "qty": 2 },
+      { "id": "water_clean", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "cornbread", "qty": 5 }
+    ],
+    "special": {
+      "makeItem": {
+        "id": "cornbread",
+        "name": "Corn Bread",
+        "category": "food",
+        "stackSize": 99,
+        "food": { "hunger": 20, "morale": 1, "quality": "mid" }
+      },
+      "qty": 5
+    }
+  },
+  {
+    "id": "veggie_bread_grill",
+    "name": "Veggie Bread (Grill)",
+    "station": "grill",
+    "timeSec": 270,
+    "inputs": [
+      { "id": "vegetable", "qty": 2 },
+      { "id": "wheat", "qty": 2 },
+      { "id": "water_clean", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "veggie_bread", "qty": 5 }
+    ],
+    "special": {
+      "makeItem": {
+        "id": "veggie_bread",
+        "name": "Veggie Bread",
+        "category": "food",
+        "stackSize": 99,
+        "food": { "hunger": 22, "morale": 2, "quality": "mid" }
+      },
+      "qty": 5
+    }
+  },
+  {
+    "id": "berry_jam_grill",
+    "name": "Berry Jam (Grill)",
+    "station": "grill",
+    "timeSec": 180,
+    "inputs": [
+      { "id": "berry", "qty": 2 },
+      { "id": "water_clean", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "berry_jam", "qty": 3 }
+    ],
+    "special": {
+      "makeItem": {
+        "id": "berry_jam",
+        "name": "Berry Jam",
+        "category": "food",
+        "stackSize": 99,
+        "food": { "hunger": 8, "morale": 2, "quality": "high" }
+      },
+      "qty": 3
+    }
+  },
+  {
+    "id": "corn_whiskey_grill",
+    "name": "Corn Whiskey (Grill)",
+    "station": "grill",
+    "timeSec": 450,
+    "inputs": [
+      { "id": "corn", "qty": 2 },
+      { "id": "water_clean", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "corn_whiskey", "qty": 3 }
+    ],
+    "special": {
+      "makeItem": {
+        "id": "corn_whiskey",
+        "name": "Corn Whiskey",
+        "category": "water",
+        "stackSize": 99,
+        "water": { "thirst": 10, "morale": 2, "quality": "low" },
+        "desc": "Strong. Warms you up, but don't overdo it."
+      },
+      "qty": 3
+    }
+  },
+  {
+    "id": "salad_grill",
+    "name": "Salad (Grill)",
+    "station": "grill",
+    "timeSec": 34,
+    "inputs": [
+      { "id": "vegetable", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "salad", "qty": 1 }
+    ],
+    "special": {
+      "makeItem": {
+        "id": "salad",
+        "name": "Salad",
+        "category": "food",
+        "stackSize": 99,
+        "food": { "hunger": 12, "morale": 1, "quality": "high" }
+      },
+      "qty": 1
+    }
+  },
+  {
+    "id": "meat_sandwich_grill",
+    "name": "Meat Sandwich (Grill)",
+    "station": "grill",
+    "timeSec": 68,
+    "inputs": [
+      { "id": "wheat_bread", "qty": 1 },
+      { "id": "ration_basic", "qty": 1 },
+      { "id": "vegetable", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "meat_sandwich", "qty": 3 }
+    ],
+    "special": {
+      "makeItem": {
+        "id": "meat_sandwich",
+        "name": "Meat Sandwich",
+        "category": "food",
+        "stackSize": 99,
+        "food": { "hunger": 30, "morale": 3, "quality": "high" }
+      },
+      "qty": 3
+    }
+  },
+  {
+    "id": "fishlings_cooked_grill",
+    "name": "Cooked Fishlings (Grill)",
+    "station": "grill",
+    "timeSec": 68,
+    "inputs": [
+      { "id": "fishlings", "qty": 2 }
+    ],
+    "outputs": [
+      { "id": "fishlings_cooked", "qty": 2 }
+    ],
+    "special": {
+      "makeItem": {
+        "id": "fishlings_cooked",
+        "name": "Cooked Fishlings",
+        "category": "food",
+        "stackSize": 99,
+        "food": { "hunger": 16, "morale": 1, "quality": "mid" }
+      },
+      "qty": 2
+    }
+  },
+
+  {
+    "id": "cook_fish_grill",
+    "name": "Cook Fish (Grill)",
+    "station": "grill",
+    "timeSec": 68,
+    "inputs": [
+      { "id": "fish_raw", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "ration_basic", "qty": 1 }
+    ]
+  },
+  {
+    "id": "cook_meat_grill",
+    "name": "Cook Meat (Grill)",
+    "station": "grill",
+    "timeSec": 90,
+    "inputs": [
+      { "id": "meat_raw", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "ration_basic", "qty": 1 }
+    ]
+  },
+  {
+    "id": "boil_water_grill",
+    "name": "Boil Water (Grill)",
+    "station": "grill",
+    "timeSec": 90,
+    "inputs": [
+      { "id": "water_dirty", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "water_clean", "qty": 1 }
+    ]
+  },
+  {
+    "id": "meal_hearty_grill",
+    "name": "Hearty Meal (Grill)",
+    "station": "grill",
+    "timeSec": 180,
+    "inputs": [
+      { "id": "ration_basic", "qty": 2 },
+      { "id": "water_clean", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "meal_hearty", "qty": 1 }
+    ]
+  },
+{
     "id": "cordage",
     "name": "Cordage",
     "category": "materials",

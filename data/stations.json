@@ -1,14 +1,97 @@
 [
   {
-    "id": "storage",
-    "name": "Storage",
-    "desc": "Shared RV storage holds your supplies.",
-    "levels": [
-      { "level": 0, "cost": [], "effects": [{ "type": "storageCap", "value": 60 }] },
-      { "level": 1, "cost": [{ "id": "scrap_metal", "qty": 10 }, { "id": "wiring", "qty": 3 }], "effects": [{ "type": "storageCap", "value": 90 }] },
-      { "level": 2, "cost": [{ "id": "scrap_metal", "qty": 25 }, { "id": "wiring", "qty": 10 }], "effects": [{ "type": "storageCap", "value": 130 }] }
-    ]
-  },
+  "id": "roof_garden",
+  "name": "Roof Garden",
+  "desc": "Grow crops from seeds using dirt + clean water.",
+  "levels": [
+    { "level": 0, "cost": [], "effects": [{ "type": "stationLevel", "station": "roof_garden", "value": 0 }] },
+    {
+      "level": 1,
+      "cost": [{ "id": "wood_plank", "qty": 4 }, { "id": "nails", "qty": 4 }],
+      "effects": [{ "type": "stationLevel", "station": "roof_garden", "value": 1 }]
+    }
+  ]
+},
+{
+  "id": "husbandry_tank",
+  "name": "Husbandry Tank",
+  "desc": "Breed fish into fishlings (requires recipes).",
+  "levels": [
+    { "level": 0, "cost": [], "effects": [{ "type": "stationLevel", "station": "husbandry_tank", "value": 0 }] },
+    {
+      "level": 1,
+      "cost": [{ "id": "wood_plank", "qty": 6 }, { "id": "scrap_metal", "qty": 10 }, { "id": "glue", "qty": 4 }],
+      "effects": [{ "type": "stationLevel", "station": "husbandry_tank", "value": 1 }]
+    }
+  ]
+},
+{
+  "id": "grill",
+  "name": "Grill",
+  "desc": "A second cooking station for parallel cooking (duplicate stove recipes onto grill).",
+  "levels": [
+    { "level": 0, "cost": [], "effects": [{ "type": "stationLevel", "station": "grill", "value": 0 }] },
+    {
+      "level": 1,
+      "cost": [{ "id": "stone", "qty": 10 }, { "id": "scrap_metal", "qty": 8 }],
+      "effects": [{ "type": "stationLevel", "station": "grill", "value": 1 }]
+    }
+  ]
+},
+{
+  "id": "storage",
+  "name": "Storage",
+  "desc": "Shared RV storage holds your supplies.",
+  "levels": [
+    { "level": 0, "cost": [], "effects": [{ "type": "storageCap", "value": 60 }] },
+    {
+      "level": 1,
+      "cost": [
+        { "id": "scrap_metal", "qty": 10 },
+        { "id": "wiring", "qty": 3 }
+      ],
+      "effects": [{ "type": "storageCap", "value": 90 }]
+    },
+    {
+      "level": 2,
+      "cost": [
+        { "id": "scrap_metal", "qty": 25 },
+        { "id": "wiring", "qty": 10 }
+      ],
+      "effects": [{ "type": "storageCap", "value": 130 }]
+    },
+    {
+      "level": 3,
+      "cost": [
+        { "id": "scrap_metal", "qty": 35 },
+        { "id": "wood_plank", "qty": 10 },
+        { "id": "nails", "qty": 20 },
+        { "id": "car_parts", "qty": 4 }
+      ],
+      "effects": [{ "type": "storageCap", "value": 175 }]
+    },
+    {
+      "level": 4,
+      "cost": [
+        { "id": "scrap_metal", "qty": 55 },
+        { "id": "wood_plank", "qty": 18 },
+        { "id": "nails", "qty": 35 },
+        { "id": "car_parts", "qty": 8 }
+      ],
+      "effects": [{ "type": "storageCap", "value": 240 }]
+    },
+    {
+      "level": 5,
+      "cost": [
+        { "id": "scrap_metal", "qty": 85 },
+        { "id": "wood_plank", "qty": 28 },
+        { "id": "nails", "qty": 55 },
+        { "id": "car_parts", "qty": 12 }
+      ],
+      "effects": [{ "type": "storageCap", "value": 320 }]
+    }
+  ]
+},
   {
     "id": "bunks",
     "name": "Bunks",
