@@ -13,6 +13,45 @@
   ]
 },
 {
+  "id": "roof_garden2",
+  "name": "Roof Garden 2",
+  "desc": "Grow crops from seeds using dirt + clean water.",
+  "levels": [
+    { "level": 0, "cost": [], "effects": [{ "type": "stationLevel", "station": "roof_garden2", "value": 0 }] },
+    {
+      "level": 1,
+      "cost": [{ "id": "wood_plank", "qty": 4 }, { "id": "nails", "qty": 4 }],
+      "effects": [{ "type": "stationLevel", "station": "roof_garden2", "value": 1 }]
+    }
+  ]
+},
+{
+  "id": "window_garden",
+  "name": "Window Garden",
+  "desc": "Grow crops from seeds using dirt + clean water.",
+  "levels": [
+    { "level": 0, "cost": [], "effects": [{ "type": "stationLevel", "station": "window_garden", "value": 0 }] },
+    {
+      "level": 1,
+      "cost": [{ "id": "wood_plank", "qty": 4 }, { "id": "nails", "qty": 4 }],
+      "effects": [{ "type": "stationLevel", "station": "window_garden", "value": 1 }]
+    }
+  ]
+},
+{
+  "id": "toilet_garden",
+  "name": "Toilet Garden",
+  "desc": "Grow crops from seeds using dirt + clean water.",
+  "levels": [
+    { "level": 0, "cost": [], "effects": [{ "type": "stationLevel", "station": "toilet_garden", "value": 0 }] },
+    {
+      "level": 1,
+      "cost": [{ "id": "wood_plank", "qty": 4 }, { "id": "nails", "qty": 4 }],
+      "effects": [{ "type": "stationLevel", "station": "toilet_garden", "value": 1 }]
+    }
+  ]
+},
+{
   "id": "husbandry_tank",
   "name": "Husbandry Tank",
   "desc": "Breed fish into fishlings (requires recipes).",

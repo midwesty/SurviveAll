@@ -206,7 +206,186 @@
       { "id": "vegetable_seed", "qty": 1 }
     ]
   },
-
+{
+    "id": "grow_corn",
+    "name": "Grow Corn",
+    "station": "roof_garden2",
+    "timeSec": 86400,
+    "inputs": [
+      { "id": "corn_seed", "qty": 1 },
+      { "id": "dirt", "qty": 1 },
+      { "id": "water_clean", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "corn", "qty": 3 },
+      { "id": "corn_seed", "qty": 1 }
+    ]
+  },
+  {
+    "id": "grow_berry",
+    "name": "Grow Berries",
+    "station": "roof_garden2",
+    "timeSec": 86400,
+    "inputs": [
+      { "id": "berry_seed", "qty": 1 },
+      { "id": "dirt", "qty": 1 },
+      { "id": "water_clean", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "berry", "qty": 3 },
+      { "id": "berry_seed", "qty": 1 }
+    ]
+  },
+  {
+    "id": "grow_wheat",
+    "name": "Grow Wheat",
+    "station": "roof_garden2",
+    "timeSec": 86400,
+    "inputs": [
+      { "id": "wheat_seed", "qty": 1 },
+      { "id": "dirt", "qty": 1 },
+      { "id": "water_clean", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "wheat", "qty": 3 },
+      { "id": "wheat_seed", "qty": 1 }
+    ]
+  },
+  {
+    "id": "grow_vegetable",
+    "name": "Grow Vegetables",
+    "station": "roof_garden2",
+    "timeSec": 86400,
+    "inputs": [
+      { "id": "vegetable_seed", "qty": 1 },
+      { "id": "dirt", "qty": 1 },
+      { "id": "water_clean", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "vegetable", "qty": 3 },
+      { "id": "vegetable_seed", "qty": 1 }
+    ]
+  },
+{
+    "id": "grow_corn",
+    "name": "Grow Corn",
+    "station": "window_garden",
+    "timeSec": 86400,
+    "inputs": [
+      { "id": "corn_seed", "qty": 1 },
+      { "id": "dirt", "qty": 1 },
+      { "id": "water_clean", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "corn", "qty": 3 },
+      { "id": "corn_seed", "qty": 1 }
+    ]
+  },
+  {
+    "id": "grow_berry",
+    "name": "Grow Berries",
+    "station": "window_garden",
+    "timeSec": 86400,
+    "inputs": [
+      { "id": "berry_seed", "qty": 1 },
+      { "id": "dirt", "qty": 1 },
+      { "id": "water_clean", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "berry", "qty": 3 },
+      { "id": "berry_seed", "qty": 1 }
+    ]
+  },
+  {
+    "id": "grow_wheat",
+    "name": "Grow Wheat",
+    "station": "window_garden",
+    "timeSec": 86400,
+    "inputs": [
+      { "id": "wheat_seed", "qty": 1 },
+      { "id": "dirt", "qty": 1 },
+      { "id": "water_clean", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "wheat", "qty": 3 },
+      { "id": "wheat_seed", "qty": 1 }
+    ]
+  },
+  {
+    "id": "grow_vegetable",
+    "name": "Grow Vegetables",
+    "station": "window_garden",
+    "timeSec": 86400,
+    "inputs": [
+      { "id": "vegetable_seed", "qty": 1 },
+      { "id": "dirt", "qty": 1 },
+      { "id": "water_clean", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "vegetable", "qty": 3 },
+      { "id": "vegetable_seed", "qty": 1 }
+    ]
+  },
+{
+    "id": "grow_corn",
+    "name": "Grow Corn",
+    "station": "toilet_garden",
+    "timeSec": 86400,
+    "inputs": [
+      { "id": "corn_seed", "qty": 1 },
+      { "id": "dirt", "qty": 1 },
+      { "id": "water_clean", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "corn", "qty": 3 },
+      { "id": "corn_seed", "qty": 1 }
+    ]
+  },
+  {
+    "id": "grow_berry",
+    "name": "Grow Berries",
+    "station": "toilet_garden",
+    "timeSec": 86400,
+    "inputs": [
+      { "id": "berry_seed", "qty": 1 },
+      { "id": "dirt", "qty": 1 },
+      { "id": "water_clean", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "berry", "qty": 3 },
+      { "id": "berry_seed", "qty": 1 }
+    ]
+  },
+  {
+    "id": "grow_wheat",
+    "name": "Grow Wheat",
+    "station": "toilet_garden",
+    "timeSec": 86400,
+    "inputs": [
+      { "id": "wheat_seed", "qty": 1 },
+      { "id": "dirt", "qty": 1 },
+      { "id": "water_clean", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "wheat", "qty": 3 },
+      { "id": "wheat_seed", "qty": 1 }
+    ]
+  },
+  {
+    "id": "grow_vegetable",
+    "name": "Grow Vegetables",
+    "station": "toilet_garden",
+    "timeSec": 50400,
+    "inputs": [
+      { "id": "vegetable_seed", "qty": 1 },
+      { "id": "dirt", "qty": 1 },
+      { "id": "water_clean", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "vegetable", "qty": 3 },
+      { "id": "vegetable_seed", "qty": 1 }
+    ]
+  },
   {
     "id": "fishlings",
     "name": "Breed Fishlings",
