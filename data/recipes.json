@@ -145,7 +145,6 @@
       { "id": "boots_scrap", "qty": 1 }
     ]
   },
-
   {
     "id": "grow_corn",
     "name": "Grow Corn",
@@ -207,8 +206,8 @@
     ]
   },
 {
-    "id": "grow_corn",
-    "name": "Grow Corn",
+    "id": "grow_corn_roof2",
+    "name": "Grow Corn Roof 2",
     "station": "roof_garden2",
     "timeSec": 86400,
     "inputs": [
@@ -222,8 +221,8 @@
     ]
   },
   {
-    "id": "grow_berry",
-    "name": "Grow Berries",
+    "id": "grow_berry_roof2",
+    "name": "Grow Berries Roof 2",
     "station": "roof_garden2",
     "timeSec": 86400,
     "inputs": [
@@ -237,8 +236,8 @@
     ]
   },
   {
-    "id": "grow_wheat",
-    "name": "Grow Wheat",
+    "id": "grow_wheat_roof2",
+    "name": "Grow Wheat Roof 2",
     "station": "roof_garden2",
     "timeSec": 86400,
     "inputs": [
@@ -252,8 +251,8 @@
     ]
   },
   {
-    "id": "grow_vegetable",
-    "name": "Grow Vegetables",
+    "id": "grow_vegetable_roof2",
+    "name": "Grow Vegetables Roof 2",
     "station": "roof_garden2",
     "timeSec": 86400,
     "inputs": [
@@ -267,8 +266,8 @@
     ]
   },
 {
-    "id": "grow_corn",
-    "name": "Grow Corn",
+    "id": "grow_corn_window",
+    "name": "Grow Corn Window",
     "station": "window_garden",
     "timeSec": 86400,
     "inputs": [
@@ -282,8 +281,8 @@
     ]
   },
   {
-    "id": "grow_berry",
-    "name": "Grow Berries",
+    "id": "grow_berry_window",
+    "name": "Grow Berries Window",
     "station": "window_garden",
     "timeSec": 86400,
     "inputs": [
@@ -297,8 +296,8 @@
     ]
   },
   {
-    "id": "grow_wheat",
-    "name": "Grow Wheat",
+    "id": "grow_wheat_window",
+    "name": "Grow Wheat Window",
     "station": "window_garden",
     "timeSec": 86400,
     "inputs": [
@@ -312,8 +311,8 @@
     ]
   },
   {
-    "id": "grow_vegetable",
-    "name": "Grow Vegetables",
+    "id": "grow_vegetable_window",
+    "name": "Grow Vegetables Window",
     "station": "window_garden",
     "timeSec": 86400,
     "inputs": [
@@ -327,8 +326,8 @@
     ]
   },
 {
-    "id": "grow_corn",
-    "name": "Grow Corn",
+    "id": "grow_corn_toilet",
+    "name": "Grow Corn Toilet",
     "station": "toilet_garden",
     "timeSec": 86400,
     "inputs": [
@@ -342,8 +341,8 @@
     ]
   },
   {
-    "id": "grow_berry",
-    "name": "Grow Berries",
+    "id": "grow_berry_toilet",
+    "name": "Grow Berries Toilet",
     "station": "toilet_garden",
     "timeSec": 86400,
     "inputs": [
@@ -357,8 +356,8 @@
     ]
   },
   {
-    "id": "grow_wheat",
-    "name": "Grow Wheat",
+    "id": "grow_wheat_toilet",
+    "name": "Grow Wheat Toilet",
     "station": "toilet_garden",
     "timeSec": 86400,
     "inputs": [
@@ -372,8 +371,8 @@
     ]
   },
   {
-    "id": "grow_vegetable",
-    "name": "Grow Vegetables",
+    "id": "grow_vegetable_toilet",
+    "name": "Grow Vegetables Toilet",
     "station": "toilet_garden",
     "timeSec": 50400,
     "inputs": [
