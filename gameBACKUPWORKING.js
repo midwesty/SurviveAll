@@ -3679,60 +3679,33 @@ function tickCraftQueues(state, loadedData) {
       }, ["Add"]);
       panel.appendChild(el("div", { class: "row" }, [selItem, qtyInp, btnAdd]));
 
-            // Heal/cure
+      // Heal/cure
       panel.appendChild(el("div", { class: "smallLabel" }, ["Crew Tools"]));
-
-      // Build an NPC dropdown from npcs.json (or fallback list if JSON missing)
-      const npcs = (loadedData.data.npcs || []).slice().sort((a, b) =>
-        (a.name || a.id).localeCompare(b.name || b.id)
-      );
-
-      const selNpc = el("select", { class: "select" });
-      for (const n of npcs) selNpc.appendChild(el("option", { value: n.id }, [n.name || n.id]));
-
-      // Default selection if medic exists
-      if (npcs.some(n => n.id === "npc_medic")) selNpc.value = "npc_medic";
-
-      const btnHeal = el("button", {
-        class: "btn ghost",
-        onclick: () => {
-          for (const c of state.crew.members) {
-            c.needs.health = 100;
-            c.conditions.sickness = null;
-            c.conditions.injury = null;
-            c.conditions.downed = false;
-          }
-          pushLog(state, "ADMIN: healed and cured crew.", "system", null, loadedData);
-          safetySnapshot(state, loadedData);
-          ctx.simulateAndRender();
-        }
-      }, ["Heal/Cure All"]);
-
-      const btnSpawnNpc = el("button", {
-        class: "btn ghost",
-        onclick: () => {
-          const id = selNpc.value;
-          const res = recruitNpcFromTemplate(state, loadedData, id);
-
-          if (!res || res.ok === false) {
-            toast(res?.reason || "Could not recruit NPC.");
-            return;
-          }
-
-          pushLog(
-            state,
-            `ADMIN: recruited ${loadedData.idx.npcsById.get(id)?.name ?? id}.`,
-            "system",
-            null,
-            loadedData
-          );
-          safetySnapshot(state, loadedData);
-          ctx.simulateAndRender();
-        }
-      }, ["Spawn NPC"]);
-
       const rowHC = el("div", { class: "row" });
-      rowHC.append(btnHeal, selNpc, btnSpawnNpc);
+      rowHC.append(
+        el("button", {
+          class: "btn ghost",
+          onclick: () => {
+            for (const c of state.crew.members) {
+              c.needs.health = 100;
+              c.conditions.sickness = null;
+              c.conditions.injury = null;
+              c.conditions.downed = false;
+            }
+            pushLog(state, "ADMIN: healed and cured crew.", "system", null, loadedData);
+            safetySnapshot(state, loadedData);
+            ctx.simulateAndRender();
+          }
+        }, ["Heal/Cure All"]),
+        el("button", {
+          class: "btn ghost",
+          onclick: () => {
+            // spawn a medic NPC for testing
+            recruitNpcFromTemplate(state, loadedData, "npc_medic");
+            ctx.simulateAndRender();
+          }
+        }, ["Spawn Medic NPC"])
+      );
       panel.appendChild(rowHC);
 
       // Save export/import
