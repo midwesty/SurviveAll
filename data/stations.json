@@ -82,14 +82,14 @@
   "name": "Storage",
   "desc": "Shared RV storage holds your supplies.",
   "levels": [
-    { "level": 0, "cost": [], "effects": [{ "type": "storageCap", "value": 60 }] },
+    { "level": 0, "cost": [], "effects": [{ "type": "storageCap", "value": 100 }] },
     {
       "level": 1,
       "cost": [
         { "id": "scrap_metal", "qty": 10 },
         { "id": "wiring", "qty": 3 }
       ],
-      "effects": [{ "type": "storageCap", "value": 90 }]
+      "effects": [{ "type": "storageCap", "value": 150 }]
     },
     {
       "level": 2,
@@ -97,7 +97,7 @@
         { "id": "scrap_metal", "qty": 25 },
         { "id": "wiring", "qty": 10 }
       ],
-      "effects": [{ "type": "storageCap", "value": 130 }]
+      "effects": [{ "type": "storageCap", "value": 200 }]
     },
     {
       "level": 3,
@@ -107,7 +107,7 @@
         { "id": "nails", "qty": 20 },
         { "id": "car_parts", "qty": 4 }
       ],
-      "effects": [{ "type": "storageCap", "value": 175 }]
+      "effects": [{ "type": "storageCap", "value": 250 }]
     },
     {
       "level": 4,
@@ -117,7 +117,7 @@
         { "id": "nails", "qty": 35 },
         { "id": "car_parts", "qty": 8 }
       ],
-      "effects": [{ "type": "storageCap", "value": 240 }]
+      "effects": [{ "type": "storageCap", "value": 300 }]
     },
     {
       "level": 5,
@@ -127,7 +127,7 @@
         { "id": "nails", "qty": 55 },
         { "id": "car_parts", "qty": 12 }
       ],
-      "effects": [{ "type": "storageCap", "value": 320 }]
+      "effects": [{ "type": "storageCap", "value": 350 }]
     }
   ]
 },
