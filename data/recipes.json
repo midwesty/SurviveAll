@@ -395,7 +395,7 @@
       { "id": "water_clean", "qty": 5 }
     ],
     "outputs": [
-      { "id": "fishlings", "qty": 10 }
+      { "id": "fishlings", "qty": 20 }
     ],
     "special": {
       "makeItem": {
@@ -406,7 +406,7 @@
         "food": { "hunger": 6, "morale": 0, "quality": "low" },
         "desc": "Tiny fish. Better cooked."
       },
-      "qty": 10
+      "qty": 20
     }
   },
 
