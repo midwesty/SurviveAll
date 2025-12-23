@@ -546,8 +546,8 @@
   },
 
   {
-    "id": "metal_pickaxe",
-    "name": "Metal Pickaxe",
+    "id": "stone_pickaxe",
+    "name": "Stone Pickaxe",
     "category": "tool",
     "stackSize": 1,
     "equipSlot": "mainHand",

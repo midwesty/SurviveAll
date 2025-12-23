@@ -324,7 +324,7 @@
   "strenuous": false,
   "toolTag": "fishing",
   "yields": [
-    { "id": "fish_live", "min": 1, "max": 2 }
+    { "id": "live_fish", "min": 1, "max": 2 }
   ],
   "risk": { "minorInjury": 0.02, "majorInjury": 0.003, "toolWear": 0.08, "sickness": 0.01 },
   "xpSkill": "Wilderness"
@@ -353,9 +353,9 @@
   "baseSec": 1800,
   "strenuous": true,
   "toolTag": "mining",
-  "requiresItem": "pickaxe_metal",
+  "requiresItem": "stone_pickaxe",
   "yields": [
-    { "id": "metal_raw", "min": 1, "max": 4 }
+    { "id": "raw_metal", "min": 1, "max": 4 }
   ],
   "risk": { "minorInjury": 0.08, "majorInjury": 0.02, "toolWear": 0.25, "sickness": 0.01 },
   "xpSkill": "Scavenge"

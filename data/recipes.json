@@ -44,25 +44,25 @@
     }
   },
   {
-    "id": "pickaxe_metal",
-    "name": "Craft Metal Pickaxe",
+    "id": "stone_pickaxe",
+    "name": "Craft Stone Pickaxe",
     "station": "workbench",
     "timeSec": 180,
     "inputs": [
       { "id": "stick", "qty": 2 },
-      { "id": "cordage_item", "qty": 1 },
-      { "id": "raw_metal", "qty": 2 }
+      { "id": "cordage_item", "qty": 2 },
+      { "id": "stone", "qty": 8 }
     ],
     "outputs": [
-      { "id": "pickaxe_metal", "qty": 1 }
+      { "id": "stone_pickaxe", "qty": 1 }
     ],
     "special": {
       "makeItem": {
-        "id": "pickaxe_metal",
-        "name": "Metal Pickaxe",
+        "id": "stone_pickaxe",
+        "name": "Stone Pickaxe",
         "category": "tool",
         "stackSize": 1,
-        "tool": { "tag": "pickaxe", "tier": 1 },
+        "tool": { "tag": "pickaxe", "tier": 2 },
         "desc": "Required for mining metal."
       },
       "qty": 1
