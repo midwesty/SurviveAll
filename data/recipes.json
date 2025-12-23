@@ -1649,5 +1649,26 @@
       }
     ],
     "special": null
+  },
+  {
+    "id": "forge_scrap",
+    "name": "Forge Scrap Metal",
+    "category": "material",
+    "station": "recycler",
+    "stationLevel": 1,
+    "timeSec": 300,
+    "inputs": [
+      {
+        "id": "raw_metal",
+        "qty": 5
+      }
+    ],
+    "outputs": [
+      {
+        "id": "scrap_metal",
+        "qty": 1
+      }
+    ],
+    "special": null
   }
 ]
