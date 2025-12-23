@@ -21,6 +21,21 @@
         "id": "fiber",
         "min": 0,
         "max": 4
+      },
+      {
+        "id": "bottle_empty",
+        "min": 0,
+        "max": 1
+      },
+      {
+        "id": "jug_empty",
+        "min": 0,
+        "max": 1
+      },
+      {
+        "id": "bucket_empty",
+        "min": 0,
+        "max": 1
       }
     ],
     "risk": {

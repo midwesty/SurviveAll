@@ -634,6 +634,39 @@
     "stackSize": 10,
     "food": { "hunger": 26, "morale": 8, "quality": "high" },
     "sources": []
+  },
+  {
+    "id": "bottle_empty",
+    "name": "Empty Bottle",
+    "category": "container",
+    "stackSize": 20,
+    "desc": "A small container that can hold water.",
+    "container": {
+      "waterUnits": 1,
+      "gatherSeconds": 30
+    }
+  },
+  {
+    "id": "jug_empty",
+    "name": "Empty Jug",
+    "category": "container",
+    "stackSize": 10,
+    "desc": "A medium container for water (awkward but efficient).",
+    "container": {
+      "waterUnits": 5,
+      "gatherSeconds": 60
+    }
+  },
+  {
+    "id": "bucket_empty",
+    "name": "Empty Bucket",
+    "category": "container",
+    "stackSize": 5,
+    "desc": "A large container for water (awkward but efficient).",
+    "container": {
+      "waterUnits": 10,
+      "gatherSeconds": 120
+    }
   }
 
 ]
