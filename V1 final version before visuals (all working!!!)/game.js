@@ -112,30 +112,6 @@
   }
 
 
-  function normalizePortraitPath(p) {
-    if (typeof p !== "string") return "";
-    let s = p.trim();
-    if (!s) return "";
-    // Allow absolute URLs if user ever supplies them (still works on GH Pages)
-    if (/^(https?:)?\/\//i.test(s)) return s;
-    // Normalize leading ./ or /
-    if (s.startsWith("./")) s = s.slice(2);
-    if (s.startsWith("/")) s = s.slice(1);
-    // If it's just a filename, assume it's in images/portraits/
-    if (!s.includes("/")) return `images/portraits/${s}`;
-    return s;
-  }
-
-  function initialsFromName(name) {
-    const s = String(name || "").trim();
-    if (!s) return "?";
-    const parts = s.split(/\s+/).filter(Boolean);
-    const a = parts[0]?.[0] ?? "?";
-    const b = (parts.length > 1 ? parts[parts.length - 1]?.[0] : parts[0]?.[1]) ?? "";
-    return (a + b).toUpperCase();
-  }
-
-
   function weightedPick(rng, entries /* [{id, w}] */) {
     const total = entries.reduce((a, e) => a + Math.max(0, e.w), 0);
     if (total <= 0) return entries[0]?.id ?? null;
@@ -545,9 +521,7 @@
     animals: [
       { id: "rabbit", name: "Rabbit", biomes: ["wild_forest","riverbed","overgrown_suburb"], drops: [{ id: "meat_raw", min: 1, max: 2 }] },
       { id: "raccoon", name: "Raccoon", biomes: ["overgrown_suburb","collapsed_downtown"], drops: [{ id: "meat_raw", min: 1, max: 2 }, { id: "scrap_metal", min: 0, max: 1 }] }
-    ],
-
-    portraits: []
+    ]
   };
 
   /* =========================
@@ -568,8 +542,7 @@
       jobs: null,
       biomes: null,
       npcs: null,
-      animals: null,
-      portraits: null
+      animals: null
     };
 
     const base = "data";
@@ -581,8 +554,7 @@
       ["jobs", `${base}/jobs.json`],
       ["biomes", `${base}/biomes.json`],
       ["npcs", `${base}/npcs.json`],
-      ["animals", `${base}/animals.json`],
-      ["portraits", `${base}/portraits.json`]
+      ["animals", `${base}/animals.json`]
     ];
 
     let usedFallback = false;
@@ -594,14 +566,6 @@
         data[key] = deepCopy(FALLBACK_DATA[key]);
       }
     }
-
-    // Normalize portraits list to an array of paths (supports array or {paths:[...]})
-    let __portraitPaths = [];
-    if (Array.isArray(data.portraits)) __portraitPaths = data.portraits;
-    else if (data.portraits && Array.isArray(data.portraits.paths)) __portraitPaths = data.portraits.paths;
-    data.portraits = (__portraitPaths || [])
-      .filter(p => typeof p === "string" && p.trim())
-      .map(normalizePortraitPath);
 
     // Normalize: build item index, recipe index, etc.
     const idx = {
@@ -2239,19 +2203,6 @@ function tickCraftQueues(state, loadedData) {
     return state.crew.members.length < state.crew.maxCrew;
   }
 
-  function ensureCrewPortraitAssigned(member, state, loadedData) {
-    if (!member || typeof member !== "object") return;
-    if (member.portraitPath) return;
-
-    const paths = loadedData?.data?.portraits;
-    if (Array.isArray(paths) && paths.length) {
-      const pick = paths[randInt(Math.random, 0, paths.length - 1)];
-      member.portraitPath = normalizePortraitPath(pick);
-    } else {
-      member.portraitPath = ""; // placeholder
-    }
-  }
-
   function recruitNpcFromTemplate(state, loadedData, npcTemplateId) {
     const t = loadedData.idx.npcsById.get(npcTemplateId);
     if (!t) return { ok: false, reason: "unknown NPC" };
@@ -2272,8 +2223,6 @@ function tickCraftQueues(state, loadedData) {
     npc.needs.hunger = 70;
     npc.needs.thirst = 70;
     npc.needs.morale = 65;
-
-    ensureCrewPortraitAssigned(npc, state, loadedData);
 
     state.crew.members.push(npc);
     state.queues.jobsByCharId[npc.id] = [];
@@ -2414,8 +2363,6 @@ function tickCraftQueues(state, loadedData) {
     windshield: null,
     windshieldTitle: null,
     rvView: null,
-    npcStrip: null,
-    npcGrid: null,
 
     // HUD stats
     statFuel: null,
@@ -2456,17 +2403,6 @@ function tickCraftQueues(state, loadedData) {
       el("div", { class: "rvPlaceholder" }, ["[ RV ]"])
     ]);
     UI.windshield.append(UI.windshieldTitle, UI.rvView);
-
-    // NPC portrait strip (mounted from index.html #npcStripMount if present)
-    const npcMount = document.getElementById("npcStripMount");
-    UI.npcStrip = npcMount ? npcMount : el("div", { class: "npcStrip", id: "npcStrip" });
-    if (npcMount) {
-      npcMount.id = "npcStrip";
-      npcMount.className = "npcStrip";
-      clearNode(npcMount);
-    }
-    UI.npcGrid = el("div", { class: "npcGrid" });
-    UI.npcStrip.appendChild(UI.npcGrid);
 
     // Dashboard HUD
     const hud = el("div", { class: "hud" });
@@ -2517,7 +2453,7 @@ function tickCraftQueues(state, loadedData) {
     UI.panelBody = el("div", { class: "panelBody" }, []);
     UI.panel.append(titleRow, UI.panelBody);
 
-    UI.root.append(UI.windshield, UI.npcStrip, hud, UI.panel);
+    UI.root.append(UI.windshield, hud, UI.panel);
     document.body.appendChild(UI.root);
   }
 
@@ -2576,78 +2512,6 @@ function tickCraftQueues(state, loadedData) {
     const rv = UI.rvView.querySelector(".rvPlaceholder");
     if (rv) rv.textContent = rvText;
   }
-  function renderNpcStrip(state, loadedData) {
-  if (!UI.npcStrip || !UI.npcGrid) return;
-
-  const crew = Array.isArray(state?.crew?.members) ? state.crew.members : [];
-
-  // NEW: include the whole crew, with the player (Rover) forced to be first
-  const rover = crew.find(c => c && c.isPlayer) || null;
-  const others = rover ? crew.filter(c => c && c !== rover) : crew.filter(c => c);
-
-  const members = rover ? [rover, ...others] : others;
-
-  // NEW: only hide if there is literally nobody to show
-  if (!members.length) {
-    UI.npcStrip.style.display = "none";
-    clearNode(UI.npcGrid);
-    return;
-  }
-
-  UI.npcStrip.style.display = "";
-  clearNode(UI.npcGrid);
-
-  for (const c of members) {
-    ensureCrewPortraitAssigned(c, state, loadedData);
-
-    const name = String(c.name || "Crew");
-    const card = el("div", { class: "npcCard", title: name });
-
-      if (c.portraitPath) {
-        const img = el("img", { class: "npcImg", alt: name, loading: "lazy" });
-        img.src = c.portraitPath;
-        img.addEventListener("error", () => {
-          try { img.remove(); } catch (_) {}
-          card.classList.add("noImg");
-          card.insertBefore(el("div", { class: "npcPlaceholder" }, [initialsFromName(name)]), card.firstChild);
-        }, { once: true });
-        card.appendChild(img);
-      } else {
-        card.classList.add("noImg");
-        card.appendChild(el("div", { class: "npcPlaceholder" }, [initialsFromName(name)]));
-      }
-
-      const cond = c.conditions || {};
-      const badgeWrap = el("div", { class: "npcBadges" }, []);
-      if (cond.downed) badgeWrap.appendChild(el("span", { class: "npcBadge downed" }, ["Downed"]));
-      if (cond.sickness) badgeWrap.appendChild(el("span", { class: "npcBadge sick" }, ["Sick"]));
-      if (cond.injury) badgeWrap.appendChild(el("span", { class: "npcBadge injured" }, ["Injured"]));
-      if (badgeWrap.childNodes.length) card.appendChild(badgeWrap);
-
-      const needs = c.needs || {};
-      const bars = el("div", { class: "npcBars" }, []);
-
-      const defs = [
-        ["Hunger", needs.hunger, "hunger"],
-        ["Thirst", needs.thirst, "thirst"],
-        ["Morale", needs.morale, "morale"],
-        ["Health", needs.health, "health"]
-      ];
-
-      for (const [label, val, cls] of defs) {
-        const pct = clamp(Number.isFinite(val) ? val : 0, 0, 100);
-        const bar = el("div", { class: `npcBar ${cls}`, title: `${label}: ${Math.round(pct)}` }, []);
-        const fill = el("div", { class: "npcBarFill" }, []);
-        fill.style.width = `${pct}%`;
-        bar.appendChild(fill);
-        bars.appendChild(bar);
-      }
-
-      card.appendChild(bars);
-      UI.npcGrid.appendChild(card);
-    }
-  }
-
 
   function renderHudStats(state, loadedData) {
     // Fuel is not implemented as a resource yet; show placeholder
@@ -2672,7 +2536,6 @@ function tickCraftQueues(state, loadedData) {
   function renderAll(state, loadedData) {
     renderHudStats(state, loadedData);
     renderWindshield(state, loadedData);
-    renderNpcStrip(state, loadedData);
     renderLog(state);
   }
 
