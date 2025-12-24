@@ -156,7 +156,7 @@
       { "id": "water_clean", "qty": 1 }
     ],
     "outputs": [
-      { "id": "corn", "qty": 3 },
+      { "id": "corn", "qty": 8 },
       { "id": "corn_seed", "qty": 1 }
     ]
   },
@@ -171,7 +171,7 @@
       { "id": "water_clean", "qty": 1 }
     ],
     "outputs": [
-      { "id": "berry", "qty": 3 },
+      { "id": "berry", "qty": 8 },
       { "id": "berry_seed", "qty": 1 }
     ]
   },
@@ -186,7 +186,7 @@
       { "id": "water_clean", "qty": 1 }
     ],
     "outputs": [
-      { "id": "wheat", "qty": 3 },
+      { "id": "wheat", "qty": 8 },
       { "id": "wheat_seed", "qty": 1 }
     ]
   },
@@ -201,7 +201,7 @@
       { "id": "water_clean", "qty": 1 }
     ],
     "outputs": [
-      { "id": "vegetable", "qty": 3 },
+      { "id": "vegetable", "qty": 8 },
       { "id": "vegetable_seed", "qty": 1 }
     ]
   },
@@ -216,7 +216,7 @@
       { "id": "water_clean", "qty": 1 }
     ],
     "outputs": [
-      { "id": "corn", "qty": 3 },
+      { "id": "corn", "qty": 8 },
       { "id": "corn_seed", "qty": 1 }
     ]
   },
@@ -231,7 +231,7 @@
       { "id": "water_clean", "qty": 1 }
     ],
     "outputs": [
-      { "id": "berry", "qty": 3 },
+      { "id": "berry", "qty": 8 },
       { "id": "berry_seed", "qty": 1 }
     ]
   },
@@ -246,7 +246,7 @@
       { "id": "water_clean", "qty": 1 }
     ],
     "outputs": [
-      { "id": "wheat", "qty": 3 },
+      { "id": "wheat", "qty": 8 },
       { "id": "wheat_seed", "qty": 1 }
     ]
   },
@@ -261,7 +261,7 @@
       { "id": "water_clean", "qty": 1 }
     ],
     "outputs": [
-      { "id": "vegetable", "qty": 3 },
+      { "id": "vegetable", "qty": 8 },
       { "id": "vegetable_seed", "qty": 1 }
     ]
   },
@@ -276,7 +276,7 @@
       { "id": "water_clean", "qty": 1 }
     ],
     "outputs": [
-      { "id": "corn", "qty": 3 },
+      { "id": "corn", "qty": 8 },
       { "id": "corn_seed", "qty": 1 }
     ]
   },
@@ -291,7 +291,7 @@
       { "id": "water_clean", "qty": 1 }
     ],
     "outputs": [
-      { "id": "berry", "qty": 3 },
+      { "id": "berry", "qty": 8 },
       { "id": "berry_seed", "qty": 1 }
     ]
   },
@@ -306,7 +306,7 @@
       { "id": "water_clean", "qty": 1 }
     ],
     "outputs": [
-      { "id": "wheat", "qty": 3 },
+      { "id": "wheat", "qty": 8 },
       { "id": "wheat_seed", "qty": 1 }
     ]
   },
@@ -321,7 +321,7 @@
       { "id": "water_clean", "qty": 1 }
     ],
     "outputs": [
-      { "id": "vegetable", "qty": 3 },
+      { "id": "vegetable", "qty": 8 },
       { "id": "vegetable_seed", "qty": 1 }
     ]
   },
@@ -336,7 +336,7 @@
       { "id": "water_clean", "qty": 1 }
     ],
     "outputs": [
-      { "id": "corn", "qty": 3 },
+      { "id": "corn", "qty": 8 },
       { "id": "corn_seed", "qty": 1 }
     ]
   },
@@ -351,7 +351,7 @@
       { "id": "water_clean", "qty": 1 }
     ],
     "outputs": [
-      { "id": "berry", "qty": 3 },
+      { "id": "berry", "qty": 8 },
       { "id": "berry_seed", "qty": 1 }
     ]
   },
@@ -366,7 +366,7 @@
       { "id": "water_clean", "qty": 1 }
     ],
     "outputs": [
-      { "id": "wheat", "qty": 3 },
+      { "id": "wheat", "qty": 8 },
       { "id": "wheat_seed", "qty": 1 }
     ]
   },
@@ -381,7 +381,7 @@
       { "id": "water_clean", "qty": 1 }
     ],
     "outputs": [
-      { "id": "vegetable", "qty": 3 },
+      { "id": "vegetable", "qty": 8 },
       { "id": "vegetable_seed", "qty": 1 }
     ]
   },
@@ -556,10 +556,10 @@
     "station": "stove",
     "timeSec": 45,
     "inputs": [
-      { "id": "vegetable", "qty": 1 }
+      { "id": "vegetable", "qty": 2 }
     ],
     "outputs": [
-      { "id": "salad", "qty": 1 }
+      { "id": "salad", "qty": 2 }
     ],
     "special": {
       "makeItem": {
@@ -569,7 +569,7 @@
         "stackSize": 99,
         "food": { "hunger": 12, "morale": 1, "quality": "high" }
       },
-      "qty": 1
+      "qty": 2
     }
   },
   {
@@ -765,10 +765,10 @@
     "station": "grill",
     "timeSec": 34,
     "inputs": [
-      { "id": "vegetable", "qty": 1 }
+      { "id": "vegetable", "qty": 2 }
     ],
     "outputs": [
-      { "id": "salad", "qty": 1 }
+      { "id": "salad", "qty": 2 }
     ],
     "special": {
       "makeItem": {
@@ -778,7 +778,7 @@
         "stackSize": 99,
         "food": { "hunger": 12, "morale": 1, "quality": "high" }
       },
-      "qty": 1
+      "qty": 2
     }
   },
   {
