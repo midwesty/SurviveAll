@@ -2576,133 +2576,78 @@ function tickCraftQueues(state, loadedData) {
     const rv = UI.rvView.querySelector(".rvPlaceholder");
     if (rv) rv.textContent = rvText;
   }
-function updateNpcCardOverlays(card, c) {
-  if (!card || !c) return;
-
-  // Badges (always present, just hide if none)
-  const cond = c.conditions || {};
-  let badgeWrap = card.querySelector(".npcBadges");
-  if (!badgeWrap) {
-    badgeWrap = el("div", { class: "npcBadges" }, []);
-    card.appendChild(badgeWrap);
-  }
-  clearNode(badgeWrap);
-
-  if (cond.downed) badgeWrap.appendChild(el("span", { class: "npcBadge downed" }, ["Downed"]));
-  if (cond.sickness) badgeWrap.appendChild(el("span", { class: "npcBadge sick" }, ["Sick"]));
-  if (cond.injury) badgeWrap.appendChild(el("span", { class: "npcBadge injured" }, ["Injured"]));
-  badgeWrap.style.display = badgeWrap.childNodes.length ? "" : "none";
-
-  // Bars: update widths in-place
-  const needs = c.needs || {};
-  const defs = [
-    ["Hunger", needs.hunger, "hunger"],
-    ["Thirst", needs.thirst, "thirst"],
-    ["Morale", needs.morale, "morale"],
-    ["Health", needs.health, "health"]
-  ];
-
-  for (const [label, val, cls] of defs) {
-    const pct = clamp(Number.isFinite(val) ? val : 0, 0, 100);
-    const bar = card.querySelector(`.npcBar.${cls}`);
-    const fill = bar ? bar.querySelector(".npcBarFill") : null;
-    if (bar) bar.title = `${label}: ${Math.round(pct)}`;
-    if (fill) fill.style.width = `${pct}%`;
-  }
-}
-
-function renderNpcStrip(state, loadedData) {
+  function renderNpcStrip(state, loadedData) {
   if (!UI.npcStrip || !UI.npcGrid) return;
 
   const crew = Array.isArray(state?.crew?.members) ? state.crew.members : [];
 
-  // Include whole crew, with Rover forced to be first
+  // NEW: include the whole crew, with the player (Rover) forced to be first
   const rover = crew.find(c => c && c.isPlayer) || null;
   const others = rover ? crew.filter(c => c && c !== rover) : crew.filter(c => c);
+
   const members = rover ? [rover, ...others] : others;
 
+  // NEW: only hide if there is literally nobody to show
   if (!members.length) {
     UI.npcStrip.style.display = "none";
     clearNode(UI.npcGrid);
-    UI.npcGrid.dataset.key = "";
     return;
   }
 
   UI.npcStrip.style.display = "";
-
-  // Ensure portraits assigned BEFORE we build the key
-  for (const c of members) {
-    ensureCrewPortraitAssigned(c, state, loadedData);
-  }
-
-  // Key based on stable identity + portrait
-  const key = members.map(c => {
-    const id = (c.id || c.uid || c.key || c.name || "");
-    const p = (c.portraitPath || "");
-    return `${id}|${p}`;
-  }).join("||");
-
-  // If nothing changed, DO NOT rebuild DOM (prevents mobile flashing)
-  if (UI.npcGrid.dataset.key === key && UI.npcGrid.children.length === members.length) {
-    for (let i = 0; i < members.length; i++) {
-      updateNpcCardOverlays(UI.npcGrid.children[i], members[i]);
-    }
-    return;
-  }
-
-  UI.npcGrid.dataset.key = key;
-
-  // Rebuild only when roster/portrait set changes
   clearNode(UI.npcGrid);
 
   for (const c of members) {
+    ensureCrewPortraitAssigned(c, state, loadedData);
+
     const name = String(c.name || "Crew");
     const card = el("div", { class: "npcCard", title: name });
 
-    if (c.portraitPath) {
-      const img = el("img", { class: "npcImg", alt: name, loading: "lazy" });
-      img.src = c.portraitPath;
-      img.addEventListener("error", () => {
-        try { img.remove(); } catch (_) {}
+      if (c.portraitPath) {
+        const img = el("img", { class: "npcImg", alt: name, loading: "lazy" });
+        img.src = c.portraitPath;
+        img.addEventListener("error", () => {
+          try { img.remove(); } catch (_) {}
+          card.classList.add("noImg");
+          card.insertBefore(el("div", { class: "npcPlaceholder" }, [initialsFromName(name)]), card.firstChild);
+        }, { once: true });
+        card.appendChild(img);
+      } else {
         card.classList.add("noImg");
-        card.insertBefore(el("div", { class: "npcPlaceholder" }, [initialsFromName(name)]), card.firstChild);
-      }, { once: true });
-      card.appendChild(img);
-    } else {
-      card.classList.add("noImg");
-      card.appendChild(el("div", { class: "npcPlaceholder" }, [initialsFromName(name)]));
+        card.appendChild(el("div", { class: "npcPlaceholder" }, [initialsFromName(name)]));
+      }
+
+      const cond = c.conditions || {};
+      const badgeWrap = el("div", { class: "npcBadges" }, []);
+      if (cond.downed) badgeWrap.appendChild(el("span", { class: "npcBadge downed" }, ["Downed"]));
+      if (cond.sickness) badgeWrap.appendChild(el("span", { class: "npcBadge sick" }, ["Sick"]));
+      if (cond.injury) badgeWrap.appendChild(el("span", { class: "npcBadge injured" }, ["Injured"]));
+      if (badgeWrap.childNodes.length) card.appendChild(badgeWrap);
+
+      const needs = c.needs || {};
+      const bars = el("div", { class: "npcBars" }, []);
+
+      const defs = [
+        ["Hunger", needs.hunger, "hunger"],
+        ["Thirst", needs.thirst, "thirst"],
+        ["Morale", needs.morale, "morale"],
+        ["Health", needs.health, "health"]
+      ];
+
+      for (const [label, val, cls] of defs) {
+        const pct = clamp(Number.isFinite(val) ? val : 0, 0, 100);
+        const bar = el("div", { class: `npcBar ${cls}`, title: `${label}: ${Math.round(pct)}` }, []);
+        const fill = el("div", { class: "npcBarFill" }, []);
+        fill.style.width = `${pct}%`;
+        bar.appendChild(fill);
+        bars.appendChild(bar);
+      }
+
+      card.appendChild(bars);
+      UI.npcGrid.appendChild(card);
     }
-
-    // Build overlays once (badge wrap + bars)
-    const badgeWrap = el("div", { class: "npcBadges" }, []);
-    card.appendChild(badgeWrap);
-
-    const bars = el("div", { class: "npcBars" }, []);
-    const needs = c.needs || {};
-    const defs = [
-      ["Hunger", needs.hunger, "hunger"],
-      ["Thirst", needs.thirst, "thirst"],
-      ["Morale", needs.morale, "morale"],
-      ["Health", needs.health, "health"]
-    ];
-
-    for (const [label, val, cls] of defs) {
-      const pct = clamp(Number.isFinite(val) ? val : 0, 0, 100);
-      const bar = el("div", { class: `npcBar ${cls}`, title: `${label}: ${Math.round(pct)}` }, []);
-      const fill = el("div", { class: "npcBarFill" }, []);
-      fill.style.width = `${pct}%`;
-      bar.appendChild(fill);
-      bars.appendChild(bar);
-    }
-
-    card.appendChild(bars);
-
-    // Ensure correct badges + bar widths right now
-    updateNpcCardOverlays(card, c);
-
-    UI.npcGrid.appendChild(card);
   }
-}
+
 
   function renderHudStats(state, loadedData) {
     // Fuel is not implemented as a resource yet; show placeholder
