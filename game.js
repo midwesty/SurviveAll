@@ -2921,7 +2921,7 @@ function renderNpcStrip(state, loadedData) {
               return best;
             };
 
-            const desired = ["forage", "scavenge", "hunt", "fish"];
+            const desired = ["forage", "scavenge", "hunt", "fish", "search_live_fish", "gather_car_parts"];
             const actionCandidates = desired.map(pickJobId).filter(Boolean);
 
             const actOptions = (actionCandidates.length ? actionCandidates : ["forage"]).map(id => ({
