@@ -597,6 +597,30 @@
     }
   },
   {
+    "id": "cornbread_sandwich",
+    "name": "Cornbread Sandwich",
+    "station": "stove",
+    "timeSec": 90,
+    "inputs": [
+      { "id": "cornbread", "qty": 1 },
+      { "id": "ration_basic", "qty": 1 },
+      { "id": "berry_jam", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "cornbread_sandwich", "qty": 3 }
+    ],
+    "special": {
+      "makeItem": {
+        "id": "cornbread_sandwich",
+        "name": "Cornbread Sandwich",
+        "category": "food",
+        "stackSize": 99,
+        "food": { "hunger": 30, "morale": 3, "quality": "high" }
+      },
+      "qty": 3
+    }
+  },
+  {
     "id": "fishlings_cooked",
     "name": "Cooked Fishlings",
     "station": "stove",
@@ -798,6 +822,30 @@
       "makeItem": {
         "id": "meat_sandwich",
         "name": "Meat Sandwich",
+        "category": "food",
+        "stackSize": 99,
+        "food": { "hunger": 30, "morale": 3, "quality": "high" }
+      },
+      "qty": 3
+    }
+  },
+  {
+    "id": "cornbread_sandwich",
+    "name": "Cornbread Sandwich",
+    "station": "grill",
+    "timeSec": 90,
+    "inputs": [
+      { "id": "cornbread", "qty": 1 },
+      { "id": "ration_basic", "qty": 1 },
+      { "id": "berry_jam", "qty": 1 }
+    ],
+    "outputs": [
+      { "id": "cornbread_sandwich", "qty": 3 }
+    ],
+    "special": {
+      "makeItem": {
+        "id": "cornbread_sandwich",
+        "name": "Cornbread Sandwich",
         "category": "food",
         "stackSize": 99,
         "food": { "hunger": 30, "morale": 3, "quality": "high" }

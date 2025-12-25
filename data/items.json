@@ -635,6 +635,14 @@
     "food": { "hunger": 26, "morale": 8, "quality": "high" },
     "sources": []
   },
+{
+    "id": "cornbread_sandwich",
+    "name": "Cornbread Sandwich",
+    "category": "food",
+    "stackSize": 10,
+    "food": { "hunger": 26, "morale": 8, "quality": "high" },
+    "sources": []
+  },
   {
     "id": "bottle_empty",
     "name": "Empty Bottle",
