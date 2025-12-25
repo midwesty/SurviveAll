@@ -553,7 +553,7 @@
   {
     "id": "salad",
     "name": "Salad",
-    "station": "stove",
+    "station": "meal_prep",
     "timeSec": 45,
     "inputs": [
       { "id": "vegetable", "qty": 2 }
@@ -575,7 +575,7 @@
   {
     "id": "meat_sandwich",
     "name": "Meat Sandwich",
-    "station": "stove",
+    "station": "meal_prep",
     "timeSec": 90,
     "inputs": [
       { "id": "wheat_bread", "qty": 1 },
@@ -599,7 +599,7 @@
   {
     "id": "cornbread_sandwich",
     "name": "Cornbread Sandwich",
-    "station": "stove",
+    "station": "meal_prep",
     "timeSec": 90,
     "inputs": [
       { "id": "cornbread", "qty": 1 },
@@ -1295,7 +1295,7 @@
     "id": "trail_mix",
     "name": "Trail Mix Pack",
     "category": "food",
-    "station": "stove",
+    "station": "meal_prep",
     "stationLevel": 0,
     "timeSec": 240,
     "inputs": [
